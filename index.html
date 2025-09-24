@@ -440,9 +440,10 @@
 
     <!-- Firebase SDKs -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        // UPDATED: Using a newer version of Firebase SDK (v10.12.2)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
         // Your web app's Firebase configuration
@@ -691,7 +692,7 @@
                     renderTable();
                 }, (error) => {
                     console.error("Erro ao buscar fornecedores: ", error);
-                    showToast("Não foi possível carregar os fornecedores.", "error");
+                    showToast("Não foi possível carregar os fornecedores. Verifique as regras de segurança do Firestore.", "error");
                 });
             }
             
@@ -1411,4 +1412,3 @@
     </script>
 </body>
 </html>
-

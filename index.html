@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Fornecedores</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ionicons CDN para ícones -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos personalizados */
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #6366f1;
+            --background-color: #f3f4f6;
+            --sidebar-bg: #1f2937;
+            --sidebar-text: #d1d5db;
+            --sidebar-hover: #374151;
+            --table-header: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+        }
+
+        /* Animação de transição para a sidebar */
+        #sidebar {
+            transition: width 0.3s ease-in-out;
+        }
+
+        .sidebar-item-text {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        /* Estilos para o Toast/Notificação */
+        #toast {
+            transition: opacity 0.5s, transform 0.5s;
+        }
+
+        /* Animação de entrada do Modal */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal[aria-hidden="false"] {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        .modal[aria-hidden="false"] > div {
+            animation: slideIn 0.4s ease-out forwards;
+        }
+        .copy-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+        .copy-btn:hover {
+            color: var(--primary-color);
+        }
+        .address-list-item {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .address-list-item:hover {
+            background-color: #f9fafb;
+        }
+        
+        /* Estilos do Loader de Importação */
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .dot-loader {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            animation: dot-loader-animation 1.4s infinite ease-in-out both;
+            display: inline-block;
+        }
+        .dot-loader.dot-1 { animation-delay: -0.32s; }
+        .dot-loader.dot-2 { animation-delay: -0.16s; }
+        @keyframes dot-loader-animation {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Tela de Login / Registro -->
+    <div id="login-view" class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-xl w-full max-w-md">
+            <div class="text-center">
+                <h1 id="login-title" class="text-3xl font-bold text-gray-800" style="color: #3b82f6;">Gestão de Fornecedores</h1>
+                <p id="login-subtitle" class="mt-2 text-gray-500">Acesse seu painel de controle</p>
+            </div>
+
+            <form id="auth-form" class="mt-10 space-y-6">
+                <div>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <ion-icon name="mail-outline" class="text-gray-400"></ion-icon>
+                        </span>
+                        <input type="email" id="email-input" placeholder="Seu e-mail" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                </div>
+
+                <div>
+                     <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                           <ion-icon name="lock-closed-outline" class="text-gray-400"></ion-icon>
+                        </span>
+                        <input type="password" id="password-input" placeholder="Sua senha" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                         <button type="button" id="password-toggle" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600">
+                            <ion-icon name="eye-outline" id="password-toggle-icon"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+                
+                 <div id="confirm-password-div" class="hidden">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                           <ion-icon name="lock-closed-outline" class="text-gray-400"></ion-icon>
+                        </span>
+                        <input type="password" id="confirm-password-input" placeholder="Confirme sua senha" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div id="remember-me-div" class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-900">Lembrar de mim</label>
+                    </div>
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-blue-600 hover:text-blue-500">Esqueceu a senha?</a>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" id="auth-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Entrar
+                    </button>
+                </div>
+            </form>
+             <p id="to-signup-p" class="mt-6 text-center text-sm text-gray-500">
+                Não tem uma conta? 
+                <a href="#" id="to-signup-link" class="font-medium text-blue-600 hover:text-blue-500">Crie uma agora</a>
+            </p>
+             <p id="to-login-p" class="hidden mt-6 text-center text-sm text-gray-500">
+                Já tem uma conta? 
+                <a href="#" id="to-login-link" class="font-medium text-blue-600 hover:text-blue-500">Faça o login</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Aplicação Principal (inicialmente oculta) -->
+    <div id="app-view" class="hidden h-screen w-screen flex">
+        <!-- Sidebar Expansível -->
+        <aside id="sidebar" class="bg-gray-800 text-gray-300 w-20 flex flex-col space-y-2 p-2 z-20" style="background-color: var(--sidebar-bg);">
+            <div class="flex items-center justify-between p-2 h-16">
+                <div id="logo-container" class="flex items-center space-x-2 overflow-hidden">
+                    <ion-icon name="business-outline" class="text-3xl min-w-[40px] text-indigo-400"></ion-icon>
+                    <span id="logo-text" class="font-bold text-xl whitespace-nowrap opacity-0 transition-opacity duration-300">SGF</span>
+                </div>
+                <button id="toggleSidebar" class="p-2 rounded-md hover:bg-gray-700">
+                    <ion-icon name="menu-outline" class="text-2xl"></ion-icon>
+                </button>
+            </div>
+
+            <nav class="flex-1 space-y-2">
+                <a href="#" id="show-main-view" class="flex items-center p-3 rounded-lg bg-indigo-600 text-white" style="--hover-color: var(--sidebar-hover);">
+                    <ion-icon name="people-outline" class="text-2xl min-w-[40px]"></ion-icon>
+                    <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Fornecedores</span>
+                </a>
+                <a href="#" id="show-cep-view" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
+                    <ion-icon name="map-outline" class="text-2xl min-w-[40px]"></ion-icon>
+                    <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Buscar CEP</span>
+                </a>
+                <a href="#" id="show-cnpj-view" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
+                    <ion-icon name="search-circle-outline" class="text-2xl min-w-[40px]"></ion-icon>
+                    <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Buscar CNPJ</span>
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
+                    <ion-icon name="document-text-outline" class="text-2xl min-w-[40px]"></ion-icon>
+                    <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Relatórios</span>
+                </a>
+                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
+                    <ion-icon name="settings-outline" class="text-2xl min-w-[40px]"></ion-icon>
+                    <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Configurações</span>
+                </a>
+            </nav>
+
+            <div class="p-2 border-t border-gray-700">
+                <a href="#" id="logout-button" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
+                    <ion-icon name="log-out-outline" class="text-2xl min-w-[40px]"></ion-icon>
+                    <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Sair</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Dinâmico -->
+        <div class="flex-1 flex flex-col">
+            <header class="bg-white shadow-sm p-4 h-16 flex items-center justify-between z-10">
+                <h1 id="header-title" class="text-2xl font-bold text-gray-800">Gerenciamento de Fornecedores</h1>
+                <div class="flex items-center space-x-4">
+                    <form id="header-cnpj-form" class="hidden w-full max-w-xs relative">
+                        <input type="text" id="headerCnpjInput" placeholder="Pesquisar CNPJ... (CTRL+D)" class="w-full bg-gray-100 pl-4 pr-10 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <ion-icon name="search-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
+                    </form>
+                    <ion-icon name="notifications-outline" class="text-2xl text-gray-600 cursor-pointer"></ion-icon>
+                    <div class="w-10 h-10 bg-gray-300 rounded-full bg-cover bg-center" style="background-image: url('https://placehold.co/100x100/EFEFEF/333333?text=J')"></div>
+                </div>
+            </header>
+
+            <!-- View Principal: Lista de Fornecedores -->
+            <main id="main-view" class="flex-1 p-6 overflow-y-auto">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center space-x-4">
+                            <h2 class="text-xl font-semibold text-gray-700">Lista de Fornecedores</h2>
+                            <div id="bulk-actions-container" class="hidden">
+                                <button id="bulk-delete-btn" class="bg-red-500 text-white px-4 py-2 text-sm rounded-md hover:bg-red-600 flex items-center space-x-2">
+                                    <ion-icon name="trash-outline"></ion-icon>
+                                    <span>Excluir Selecionados</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <input type="text" id="supplier-search-input" placeholder="Buscar fornecedor..." class="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <ion-icon name="search-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white">
+                            <thead class="bg-gray-100" style="background-color: var(--table-header);">
+                                <tr>
+                                    <th class="py-3 px-4 w-12"><input type="checkbox" id="select-all-checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"></th>
+                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Cód.</th>
+                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">CNPJ</th>
+                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Nome do Fornecedor</th>
+                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Cód. Cliente</th>
+                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Observações</th>
+                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supplier-table-body" class="text-gray-700">
+                                <tr id="no-suppliers-row">
+                                    <td colspan="7" class="text-center py-10 text-gray-500">
+                                        <ion-icon name="file-tray-outline" class="text-4xl mx-auto"></ion-icon>
+                                        <p class="mt-2">Nenhum fornecedor cadastrado ainda.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="pagination-controls" class="flex justify-between items-center mt-4"></div>
+                </div>
+            </main>
+
+            <!-- View de Busca de CEP -->
+            <div id="cep-search-view" class="flex-1 p-6 overflow-y-auto hidden">
+                <div id="cep-search-container" class="bg-white p-8 rounded-xl shadow-sm mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Buscar Endereço</h2>
+                    <p class="text-gray-500">Busque por CEP ou pelo endereço.</p>
+                    
+                    <div class="border-b border-gray-200 mt-4">
+                        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                            <button id="tab-by-cep" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600">
+                                Por CEP
+                            </button>
+                            <button id="tab-by-address" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                Por Endereço
+                            </button>
+                        </nav>
+                    </div>
+
+                    <form id="cep-form" class="mt-6">
+                        <label for="cepInput" class="block text-sm font-medium text-gray-700">Digite o CEP</label>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <input type="text" id="cepInput" placeholder="00000-000" maxlength="9" class="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                            <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 flex items-center space-x-2">
+                                <ion-icon name="search-outline"></ion-icon>
+                                <span>Buscar</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <form id="address-form" class="hidden mt-6">
+                        <div class="grid grid-cols-1 md:grid-cols-[1fr_2fr_3fr_auto] gap-4 items-end">
+                            <div>
+                                <label for="ufInput" class="block text-sm font-medium text-gray-700">UF</label>
+                                <input type="text" id="ufInput" placeholder="SP" maxlength="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                            </div>
+                            <div>
+                                <label for="cityInput" class="block text-sm font-medium text-gray-700">Cidade</label>
+                                <input type="text" id="cityInput" placeholder="São Paulo" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                            </div>
+                            <div>
+                                <label for="streetInput" class="block text-sm font-medium text-gray-700">Logradouro</label>
+                                <input type="text" id="streetInput" placeholder="Av. Paulista" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                            </div>
+                            <div>
+                                <button type="submit" class="bg-indigo-600 text-white px-5 py-2 h-10 rounded-md hover:bg-indigo-700 flex items-center justify-center space-x-2 w-full">
+                                    <ion-icon name="search-outline"></ion-icon>
+                                    <span>Buscar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="cep-result">
+                    <div class="flex items-center justify-center text-gray-500">
+                        <p>Aguardando busca...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View de Busca de CNPJ -->
+            <div id="cnpj-search-view" class="flex-1 p-6 overflow-y-auto hidden">
+                <div id="initial-cnpj-search-card" class="bg-white p-8 rounded-xl shadow-sm mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Buscar Dados por CNPJ</h2>
+                    <form id="cnpj-search-form">
+                        <label for="cnpjSearchInput" class="block text-sm font-medium text-gray-700">Digite o CNPJ</label>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <input type="text" id="cnpjSearchInput" placeholder="00.000.000/0000-00" maxlength="18" class="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                            <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 flex items-center space-x-2">
+                                <ion-icon name="search-outline"></ion-icon>
+                                <span>Buscar</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div id="cnpj-result">
+                    <div class="flex items-center justify-center text-gray-500">
+                        <p>Aguardando busca...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botão Flutuante para Adicionar -->
+    <button id="add-supplier-btn" class="fixed bottom-8 right-8 bg-indigo-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-110 z-30" style="background-color: var(--primary-color);">
+        <ion-icon name="add-outline" class="text-3xl"></ion-icon>
+    </button>
+
+    <!-- Modal de Cadastro/Edição de Fornecedor -->
+    <div id="supplierModal" aria-hidden="true" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Cadastrar Novo Fornecedor</h2>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-800">
+                    <ion-icon name="close-outline" class="text-3xl"></ion-icon>
+                </button>
+            </div>
+            
+             <div id="modal-content">
+                <form id="supplier-form" class="space-y-4">
+                    <input type="hidden" id="editSupplierId" name="editSupplierId">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="supplierCode" class="block text-sm font-medium text-gray-700">Cód. Fornecedor <span class="text-red-500">*</span></label>
+                            <input type="text" id="supplierCode" name="supplierCode" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                        </div>
+                        <div>
+                            <label for="supplierCnpj" class="block text-sm font-medium text-gray-700">CNPJ <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="text" id="supplierCnpj" name="supplierCnpj" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" maxlength="18" required>
+                                <div id="cnpj-loader" class="absolute right-3 top-1/2 -translate-y-1/2 hidden">
+                                    <svg class="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="supplierName" class="block text-sm font-medium text-gray-700">Nome do Fornecedor <span class="text-red-500">*</span></label>
+                        <input type="text" id="supplierName" name="supplierName" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-gray-100" required readonly>
+                    </div>
+
+                    <div>
+                        <label for="clientCode" class="block text-sm font-medium text-gray-700">Cód. Cliente</label>
+                        <input type="text" id="clientCode" name="clientCode" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="observations" class="block text-sm font-medium text-gray-700">Observações</label>
+                        <textarea id="observations" name="observations" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                    </div>
+
+                    <div class="flex justify-end pt-4 space-x-3 border-t">
+                        <label for="json-file-input" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition cursor-pointer flex items-center gap-2">
+                           <ion-icon name="cloud-upload-outline"></ion-icon> Importar JSON
+                        </label>
+                        <input type="file" id="json-file-input" class="hidden" accept=".json">
+
+                        <button type="button" id="cancelBtn" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
+                        <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition" style="background-color: var(--primary-color);">Salvar Fornecedor</button>
+                    </div>
+                </form>
+            </div>
+             <div id="import-loader" class="hidden">
+                <div class="loader-container">
+                    <div class="flex space-x-2">
+                        <div class="dot-loader dot-1"></div>
+                        <div class="dot-loader dot-2"></div>
+                        <div class="dot-loader dot-3"></div>
+                    </div>
+                    <p class="text-gray-600">Importando fornecedores...</p>
+                    <p id="import-progress" class="text-sm text-indigo-600 font-medium"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast de Notificação -->
+    <div id="toast" class="fixed top-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 transform translate-y-[-20px] z-50">
+      <p id="toast-message">Mensagem de erro!</p>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCg-Jd-XxVh1g28_po_pomMillWdrZggfU",
+            authDomain: "fornecedores-a21f7.firebaseapp.com",
+            projectId: "fornecedores-a21f7",
+            storageBucket: "fornecedores-a21f7.firebasestorage.app",
+            messagingSenderId: "965790736406",
+            appId: "1:965790736406:web:a2b06c9fe2e9b9508c1537"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- Colocar toda a lógica da aplicação dentro do DOMContentLoaded ---
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Função de Notificação (Toast) ---
+            const showToast = (message, type = 'error') => {
+                const toast = document.getElementById('toast');
+                const toastMessage = document.getElementById('toast-message');
+                toastMessage.textContent = message;
+                toast.classList.remove('bg-red-500', 'bg-green-500', 'bg-blue-500');
+                if (type === 'success') toast.classList.add('bg-green-500');
+                else if (type === 'info') toast.classList.add('bg-blue-500');
+                else toast.classList.add('bg-red-500');
+                toast.classList.remove('opacity-0', 'translate-y-[-20px]');
+                toast.classList.add('opacity-100', 'translate-y-0');
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100', 'translate-y-0');
+                    toast.classList.add('opacity-0', 'translate-y-[-20px]');
+                }, 4000);
+            };
+            window.showToast = showToast; 
+
+            // --- Lógica de Autenticação ---
+            const loginView = document.getElementById('login-view');
+            const appView = document.getElementById('app-view');
+            const authForm = document.getElementById('auth-form');
+            const emailInput = document.getElementById('email-input');
+            const passwordInput = document.getElementById('password-input');
+            const passwordToggle = document.getElementById('password-toggle');
+            const passwordToggleIcon = document.getElementById('password-toggle-icon');
+            const authButton = document.getElementById('auth-button');
+            const logoutButton = document.getElementById('logout-button');
+            const loginTitle = document.getElementById('login-title');
+            const loginSubtitle = document.getElementById('login-subtitle');
+            const confirmPasswordDiv = document.getElementById('confirm-password-div');
+            const confirmPasswordInput = document.getElementById('confirm-password-input');
+            const toSignupP = document.getElementById('to-signup-p');
+            const toSignupLink = document.getElementById('to-signup-link');
+            const toLoginP = document.getElementById('to-login-p');
+            const toLoginLink = document.getElementById('to-login-link');
+            const rememberMeDiv = document.getElementById('remember-me-div');
+            let isLoginMode = true;
+            let unsubscribeSuppliers = null;
+
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    loginView.classList.add('hidden');
+                    appView.classList.remove('hidden');
+                    setupRealtimeListener(user.uid);
+                } else {
+                    loginView.classList.remove('hidden');
+                    appView.classList.add('hidden');
+                     if (unsubscribeSuppliers) {
+                        unsubscribeSuppliers();
+                    }
+                    suppliers = [];
+                    renderTable();
+                }
+            });
+
+            toSignupLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                isLoginMode = false;
+                loginTitle.textContent = 'Crie sua Conta';
+                loginSubtitle.textContent = 'Insira seus dados para começar';
+                authButton.textContent = 'Registrar';
+                confirmPasswordDiv.classList.remove('hidden');
+                confirmPasswordInput.required = true;
+                toSignupP.classList.add('hidden');
+                toLoginP.classList.remove('hidden');
+                rememberMeDiv.classList.add('hidden');
+            });
+
+            toLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                isLoginMode = true;
+                loginTitle.textContent = 'Gestão de Fornecedores';
+                loginSubtitle.textContent = 'Acesse seu painel de controle';
+                authButton.textContent = 'Entrar';
+                confirmPasswordDiv.classList.add('hidden');
+                confirmPasswordInput.required = false;
+                toSignupP.classList.remove('hidden');
+                toLoginP.classList.add('hidden');
+                rememberMeDiv.classList.remove('hidden');
+            });
+
+            authForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = emailInput.value;
+                const password = passwordInput.value;
+                authButton.disabled = true;
+                authButton.textContent = isLoginMode ? 'Entrando...' : 'Registrando...';
+
+                if (isLoginMode) {
+                    try {
+                        await signInWithEmailAndPassword(auth, email, password);
+                    } catch (error) {
+                        let msg = 'Ocorreu um erro ao tentar fazer login.';
+                        if (error.code === 'auth/invalid-credential') {
+                            msg = 'E-mail ou senha inválidos.';
+                        }
+                        showToast(msg, 'error');
+                    } finally {
+                        authButton.disabled = false;
+                        authButton.textContent = 'Entrar';
+                    }
+                } else { // Modo de Registro
+                    const confirmPassword = confirmPasswordInput.value;
+                    if (password.length < 6) {
+                        showToast('A senha deve ter pelo menos 6 caracteres.', 'error');
+                        authButton.disabled = false;
+                        authButton.textContent = 'Registrar';
+                        return;
+                    }
+                    if (password !== confirmPassword) {
+                        showToast('As senhas não coincidem.', 'error');
+                        authButton.disabled = false;
+                        authButton.textContent = 'Registrar';
+                        return;
+                    }
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                        showToast('Conta criada com sucesso! Você será logado.', 'success');
+                    } catch (error) {
+                        let msg = 'Ocorreu um erro ao criar a conta.';
+                        if (error.code === 'auth/email-already-in-use') {
+                            msg = 'Este e-mail já está em uso.';
+                        } else if (error.code === 'auth/invalid-email') {
+                            msg = 'O e-mail fornecido não é válido.';
+                        }
+                        showToast(msg, 'error');
+                    } finally {
+                        authButton.disabled = false;
+                        authButton.textContent = 'Registrar';
+                    }
+                }
+            });
+
+            logoutButton.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    await signOut(auth);
+                } catch (error) {
+                    showToast('Erro ao tentar sair.', 'error');
+                }
+            });
+
+            passwordToggle.addEventListener('click', () => {
+                const isPassword = passwordInput.type === 'password';
+                passwordInput.type = isPassword ? 'text' : 'password';
+                passwordToggleIcon.name = isPassword ? 'eye-off-outline' : 'eye-outline';
+            });
+            
+            // --- O restante do código da aplicação ---
+            const sidebar = document.getElementById('sidebar');
+            const toggleSidebarBtn = document.getElementById('toggleSidebar');
+            // ... (o resto das suas variáveis)
+            const logoText = document.getElementById('logo-text');
+            const sidebarItemsText = document.querySelectorAll('.sidebar-item-text');
+            const navLinks = sidebar.querySelectorAll('nav a');
+
+            const addSupplierBtn = document.getElementById('add-supplier-btn');
+            const supplierModal = document.getElementById('supplierModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const supplierForm = document.getElementById('supplier-form');
+            const supplierTableBody = document.getElementById('supplier-table-body');
+            
+            const modalTitle = supplierModal.querySelector('h2');
+            const submitButton = supplierForm.querySelector('button[type="submit"]');
+            const editSupplierIdInput = document.getElementById('editSupplierId');
+
+            const cnpjInput = document.getElementById('supplierCnpj');
+            const nameInput = document.getElementById('supplierName');
+            const cnpjLoader = document.getElementById('cnpj-loader');
+
+            const bulkActionsContainer = document.getElementById('bulk-actions-container');
+            const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const paginationControls = document.getElementById('pagination-controls');
+
+            // Views
+            const mainView = document.getElementById('main-view');
+            const cepSearchView = document.getElementById('cep-search-view');
+            const cnpjSearchView = document.getElementById('cnpj-search-view');
+            const headerTitle = document.getElementById('header-title');
+            
+            // Botões de navegação da View
+            const showMainViewBtn = document.getElementById('show-main-view');
+            const showCepViewBtn = document.getElementById('show-cep-view');
+            const showCnpjViewBtn = document.getElementById('show-cnpj-view');
+
+            // Busca CEP
+            const cepForm = document.getElementById('cep-form');
+            const cepInput = document.getElementById('cepInput');
+            const addressForm = document.getElementById('address-form');
+            const ufInput = document.getElementById('ufInput');
+            const cityInput = document.getElementById('cityInput');
+            const streetInput = document.getElementById('streetInput');
+            const cepResultDiv = document.getElementById('cep-result');
+            const tabByCep = document.getElementById('tab-by-cep');
+            const tabByAddress = document.getElementById('tab-by-address');
+
+            // Busca CNPJ
+            const initialCnpjSearchCard = document.getElementById('initial-cnpj-search-card');
+            const cnpjSearchForm = document.getElementById('cnpj-search-form');
+            const cnpjSearchInput = document.getElementById('cnpjSearchInput');
+            const headerCnpjForm = document.getElementById('header-cnpj-form');
+            const headerCnpjInput = document.getElementById('headerCnpjInput');
+            const cnpjResultDiv = document.getElementById('cnpj-result');
+            
+            let suppliers = []; // Nosso "banco de dados" em memória
+            let currentPage = 1;
+            const ROWS_PER_PAGE = 50;
+            const selectedSuppliers = new Set();
+            let cnpjSearchPerformed = false;
+            
+            // --- Lógica do Firestore ---
+            function setupRealtimeListener(userId) {
+                if (unsubscribeSuppliers) unsubscribeSuppliers(); // Cancela o listener anterior
+                
+                const suppliersCollectionRef = collection(db, 'suppliers', userId, 'userSuppliers');
+                const q = query(suppliersCollectionRef, orderBy('timestamp', 'desc'));
+
+                unsubscribeSuppliers = onSnapshot(q, (snapshot) => {
+                    suppliers = [];
+                    snapshot.forEach(doc => {
+                        suppliers.push({ ...doc.data(), id: doc.id });
+                    });
+                    renderTable();
+                }, (error) => {
+                    console.error("Erro ao buscar fornecedores: ", error);
+                    showToast("Não foi possível carregar os fornecedores.", "error");
+                });
+            }
+            
+            // --- Lógica de Importação de JSON ---
+            const jsonFileInput = document.getElementById('json-file-input');
+            const importLoader = document.getElementById('import-loader');
+            const modalContent = document.getElementById('modal-content');
+            const importProgress = document.getElementById('import-progress');
+
+            jsonFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file || !auth.currentUser) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        if (!Array.isArray(importedData)) {
+                           throw new Error('O arquivo JSON não contém um array.');
+                        }
+                        
+                        modalContent.classList.add('hidden');
+                        importLoader.classList.remove('hidden');
+                        
+                        let importedCount = 0;
+                        const totalToImport = importedData.length;
+                        const uid = auth.currentUser.uid;
+                        
+                        const processChunk = async () => {
+                             const batch = importedData.splice(0, 10);
+                             if (batch.length === 0) {
+                                showToast(`${totalToImport} fornecedor(es) importado(s) com sucesso!`, 'success');
+                                closeModal();
+                                return;
+                            }
+                            
+                            const addPromises = batch.map(item => {
+                                 const newSupplier = {
+                                    code: item.codFornecedor || 'N/A',
+                                    cnpj: formatCnpj(String(item.cnpj)) || 'N/A',
+                                    name: item.nomeFornecedor || 'N/A',
+                                    clientCode: String(item.codCliente) || '',
+                                    observations: item.centroCusto || '',
+                                    timestamp: serverTimestamp()
+                                };
+                                return addDoc(collection(db, 'suppliers', uid, 'userSuppliers'), newSupplier);
+                            });
+
+                            await Promise.all(addPromises);
+                            importedCount += batch.length;
+                            importProgress.textContent = `Processando ${importedCount} de ${totalToImport}...`;
+                            setTimeout(processChunk, 50);
+                        };
+                        processChunk();
+                    } catch (error) {
+                        showToast(`Erro ao ler o arquivo JSON: ${error.message}`, 'error');
+                         closeModal();
+                    }
+                };
+                reader.readAsText(file);
+            });
+            
+            // --- Lógica de Navegação e Views ---
+            const views = {
+                main: { element: mainView, title: 'Gerenciamento de Fornecedores', button: showMainViewBtn },
+                cep: { element: cepSearchView, title: 'Busca por Endereço', button: showCepViewBtn },
+                cnpj: { element: cnpjSearchView, title: 'Busca por CNPJ', button: showCnpjViewBtn }
+            };
+
+            function switchView(viewName) {
+                Object.values(views).forEach(view => {
+                    view.element.classList.add('hidden');
+                    view.button.classList.remove('bg-indigo-600', 'text-white');
+                });
+                
+                const selectedView = views[viewName];
+                selectedView.element.classList.remove('hidden');
+                selectedView.button.classList.add('bg-indigo-600', 'text-white');
+                headerTitle.textContent = selectedView.title;
+                addSupplierBtn.style.display = viewName === 'main' ? 'flex' : 'none';
+            }
+
+            showMainViewBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('main'); });
+            showCepViewBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('cep'); });
+            showCnpjViewBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('cnpj'); });
+
+            // --- Lógica da Sidebar ---
+            toggleSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('w-64');
+                sidebar.classList.toggle('w-20');
+                logoText.classList.toggle('opacity-100');
+                logoText.classList.toggle('opacity-0');
+                sidebarItemsText.forEach(text => {
+                    text.classList.toggle('opacity-100');
+                    text.classList.toggle('opacity-0');
+                });
+            });
+
+            // --- Lógica do Modal de Fornecedor ---
+            window.openModal = (supplierId = null) => {
+                supplierForm.reset();
+                modalContent.classList.remove('hidden');
+                importLoader.classList.add('hidden');
+                if (supplierId) {
+                    const supplier = suppliers.find(s => s.id === supplierId);
+                    if (!supplier) return;
+                    modalTitle.textContent = 'Editar Fornecedor';
+                    submitButton.textContent = 'Salvar Alterações';
+                    editSupplierIdInput.value = supplier.id;
+                    document.getElementById('supplierCode').value = supplier.code;
+                    document.getElementById('supplierCnpj').value = supplier.cnpj;
+                    document.getElementById('supplierName').value = supplier.name;
+                    document.getElementById('clientCode').value = supplier.clientCode || '';
+                    document.getElementById('observations').value = supplier.observations || '';
+                    nameInput.readOnly = false;
+                    nameInput.classList.remove('bg-gray-100');
+                } else {
+                    modalTitle.textContent = 'Cadastrar Novo Fornecedor';
+                    submitButton.textContent = 'Salvar Fornecedor';
+                    editSupplierIdInput.value = '';
+                    nameInput.readOnly = true;
+                    nameInput.classList.add('bg-gray-100');
+                }
+                supplierModal.classList.remove('hidden');
+                supplierModal.setAttribute('aria-hidden', 'false');
+            };
+
+            const closeModal = () => {
+                supplierModal.classList.add('hidden');
+                supplierModal.setAttribute('aria-hidden', 'true');
+                supplierForm.reset();
+                editSupplierIdInput.value = '';
+                nameInput.readOnly = true;
+                nameInput.classList.add('bg-gray-100');
+                 modalContent.classList.remove('hidden');
+                importLoader.classList.add('hidden');
+            };
+
+            addSupplierBtn.addEventListener('click', () => openModal(null));
+            closeModalBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            supplierModal.addEventListener('click', (event) => {
+                if (event.target === supplierModal) closeModal();
+            });
+
+            // --- Lógica de Submissão do Formulário de Fornecedor ---
+            supplierForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                 if (!auth.currentUser) {
+                    showToast('Você precisa estar logado para salvar.', 'error');
+                    return;
+                 }
+                 
+                const formData = new FormData(supplierForm);
+                const supplierId = formData.get('editSupplierId');
+                const supplierData = {
+                    code: formData.get('supplierCode'),
+                    cnpj: formData.get('supplierCnpj'),
+                    name: formData.get('supplierName'),
+                    clientCode: formData.get('clientCode'),
+                    observations: formData.get('observations'),
+                };
+
+                const uid = auth.currentUser.uid;
+
+                try {
+                    if (supplierId) {
+                        const supplierDocRef = doc(db, 'suppliers', uid, 'userSuppliers', supplierId);
+                        await updateDoc(supplierDocRef, supplierData);
+                        showToast('Fornecedor atualizado com sucesso!', 'success');
+                    } else {
+                         const dataToSave = { ...supplierData, timestamp: serverTimestamp() };
+                        await addDoc(collection(db, 'suppliers', uid, 'userSuppliers'), dataToSave);
+                        showToast('Fornecedor cadastrado com sucesso!', 'success');
+                    }
+                } catch(error) {
+                     console.error("Erro ao salvar: ", error);
+                     showToast('Erro ao salvar fornecedor.', 'error');
+                }
+                
+                closeModal();
+            });
+
+            // --- Lógica de Renderização da Tabela ---
+            function renderTable() {
+                supplierTableBody.innerHTML = '';
+                const start = (currentPage - 1) * ROWS_PER_PAGE;
+                const end = start + ROWS_PER_PAGE;
+                const paginatedSuppliers = suppliers.slice(start, end);
+
+                if (suppliers.length === 0) {
+                     supplierTableBody.innerHTML = `<tr id="no-suppliers-row"><td colspan="7" class="text-center py-10 text-gray-500"><ion-icon name="file-tray-outline" class="text-4xl mx-auto"></ion-icon><p class="mt-2">Nenhum fornecedor cadastrado ainda.</p></td></tr>`;
+                } else {
+                    paginatedSuppliers.forEach(supplier => {
+                        const isChecked = selectedSuppliers.has(supplier.id);
+                        const tr = document.createElement('tr');
+                        tr.className = `border-b hover:bg-gray-50 ${isChecked ? 'bg-indigo-50' : ''}`;
+                        tr.innerHTML = `
+                            <td class="py-3 px-4 w-12"><input type="checkbox" class="row-checkbox h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" data-id="${supplier.id}" ${isChecked ? 'checked' : ''}></td>
+                            <td class="py-3 px-4">${supplier.code}</td>
+                            <td class="py-3 px-4">${supplier.cnpj}</td>
+                            <td class="py-3 px-4 font-medium">${supplier.name}</td>
+                            <td class="py-3 px-4">${supplier.clientCode || 'N/A'}</td>
+                            <td class="py-3 px-4 text-sm text-gray-500 max-w-[200px] truncate" title="${supplier.observations || ''}">${supplier.observations || 'N/A'}</td>
+                            <td class="py-3 px-4">
+                                <div class="flex space-x-2">
+                                    <button onclick="openModal('${supplier.id}')" class="text-indigo-600 hover:text-indigo-800 p-1"><ion-icon name="create-outline"></ion-icon></button>
+                                    <button onclick="deleteSupplier('${supplier.id}')" class="text-red-600 hover:text-red-800 p-1"><ion-icon name="trash-outline"></ion-icon></button>
+                                </div>
+                            </td>
+                        `;
+                        supplierTableBody.appendChild(tr);
+                    });
+                }
+                renderPagination();
+                updateBulkActionsUI();
+            }
+
+            // --- Lógica de Deletar, Paginação, etc. ---
+             window.deleteSupplier = async (id) => {
+                if (!auth.currentUser) return;
+                try {
+                    await deleteDoc(doc(db, 'suppliers', auth.currentUser.uid, 'userSuppliers', id));
+                    showToast('Fornecedor removido.', 'info');
+                } catch (error) {
+                    showToast('Erro ao remover fornecedor.', 'error');
+                }
+            };
+            function renderPagination() {
+                paginationControls.innerHTML = '';
+                const totalSuppliers = suppliers.length;
+                const totalPages = Math.ceil(totalSuppliers / ROWS_PER_PAGE);
+                let infoHTML = `<div class="text-sm text-gray-600">Mostrando ${Math.min(totalSuppliers, 1 + (currentPage - 1) * ROWS_PER_PAGE)} a ${Math.min(currentPage * ROWS_PER_PAGE, totalSuppliers)} de ${totalSuppliers}</div>`;
+                if (totalPages <= 1) {
+                    paginationControls.innerHTML = infoHTML;
+                    return;
+                }
+                let buttonsHTML = `<div class="flex items-center">`;
+                buttonsHTML += `<button onclick="changePage(${currentPage - 1})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>`;
+                for (let i = 1; i <= totalPages; i++) {
+                     if (i === currentPage) {
+                        buttonsHTML += `<button class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-indigo-600 text-white">${i}</button>`;
+                    } else {
+                        buttonsHTML += `<button onclick="changePage(${i})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-white text-gray-700 hover:bg-gray-100">${i}</button>`;
+                    }
+                }
+                buttonsHTML += `<button onclick="changePage(${currentPage + 1})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}" ${currentPage === totalPages ? 'disabled' : ''}>Próximo</button>`;
+                buttonsHTML += `</div>`;
+                paginationControls.innerHTML = infoHTML + buttonsHTML;
+            }
+            window.changePage = (newPage) => {
+                const totalPages = Math.ceil(suppliers.length / ROWS_PER_PAGE);
+                if (newPage >= 1 && newPage <= totalPages) {
+                    currentPage = newPage;
+                    selectAllCheckbox.checked = false;
+                    renderTable();
+                }
+            }
+            function updateBulkActionsUI() {
+                if (selectedSuppliers.size > 0) {
+                    bulkActionsContainer.classList.remove('hidden');
+                    bulkDeleteBtn.querySelector('span').textContent = `Excluir ${selectedSuppliers.size} selecionado(s)`;
+                } else {
+                    bulkActionsContainer.classList.add('hidden');
+                }
+            }
+            selectAllCheckbox.addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                const checkboxes = document.querySelectorAll('.row-checkbox');
+                checkboxes.forEach(checkbox => {
+                    const id = checkbox.dataset.id;
+                    checkbox.checked = isChecked;
+                    if (isChecked) selectedSuppliers.add(id); else selectedSuppliers.delete(id);
+                });
+                renderTable();
+            });
+            supplierTableBody.addEventListener('change', (e) => {
+                if (e.target.classList.contains('row-checkbox')) {
+                    const id = e.target.dataset.id;
+                    if (e.target.checked) selectedSuppliers.add(id); else selectedSuppliers.delete(id);
+                    const totalOnPage = document.querySelectorAll('.row-checkbox').length;
+                    const selectedOnPage = document.querySelectorAll('.row-checkbox:checked').length;
+                    selectAllCheckbox.checked = totalOnPage > 0 && totalOnPage === selectedOnPage;
+                    renderTable();
+                }
+            });
+            bulkDeleteBtn.addEventListener('click', async () => {
+                 if (!auth.currentUser) return;
+                const uid = auth.currentUser.uid;
+                const deletePromises = Array.from(selectedSuppliers).map(id => deleteDoc(doc(db, 'suppliers', uid, 'userSuppliers', id)));
+                 const totalDeleted = selectedSuppliers.size;
+                try {
+                    await Promise.all(deletePromises);
+                    showToast(`${totalDeleted} fornecedor(es) removido(s).`, 'info');
+                } catch(error) {
+                     showToast('Erro ao remover fornecedores.', 'error');
+                } finally {
+                    selectedSuppliers.clear();
+                }
+            });
+
+            // --- Lógica de Busca de CEP ---
+            tabByCep.addEventListener('click', () => {
+                tabByAddress.classList.remove('border-indigo-500', 'text-indigo-600');
+                tabByAddress.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                tabByCep.classList.add('border-indigo-500', 'text-indigo-600');
+                tabByCep.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                addressForm.classList.add('hidden');
+                cepForm.classList.remove('hidden');
+            });
+
+            tabByAddress.addEventListener('click', () => {
+                tabByCep.classList.remove('border-indigo-500', 'text-indigo-600');
+                tabByCep.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                tabByAddress.classList.add('border-indigo-500', 'text-indigo-600');
+                tabByAddress.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                cepForm.classList.add('hidden');
+                addressForm.classList.remove('hidden');
+            });
+            
+            cepInput.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+                e.target.value = value.slice(0, 9);
+            });
+
+            cepForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                searchByCep(cepInput.value);
+            });
+
+            addressForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500"><p>Buscando...</p></div>`;
+                
+                const uf = ufInput.value.trim();
+                const city = cityInput.value.trim();
+                const street = expandStreetAbbreviations(streetInput.value.trim());
+
+                if (street.length < 3) {
+                     cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>O nome do logradouro deve ter pelo menos 3 caracteres.</p></div>`;
+                     return;
+                }
+
+                const encodedUf = encodeURIComponent(uf);
+                const encodedCity = encodeURIComponent(city);
+                const encodedStreet = encodeURIComponent(street);
+                
+                try {
+                    const response = await fetch(`https://viacep.com.br/ws/${encodedUf}/${encodedCity}/${encodedStreet}/json/`);
+                    if (!response.ok) throw new Error('Ocorreu um erro na comunicação com o serviço de busca.');
+                    const data = await response.json();
+
+                    if (data.erro || data.length === 0) {
+                         cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500"><p>Nenhum endereço encontrado com os critérios informados.</p></div>`;
+                         return;
+                    }
+                    
+                    if(data.length === 1) {
+                        renderViaCepResult(data[0]);
+                        return;
+                    }
+
+                    let resultHTML = `<div class="bg-white p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-lg mb-4 text-gray-700">Resultados Encontrados (${data.length}) - Clique para ver detalhes</h3><div class="space-y-2 max-h-80 overflow-y-auto">`;
+                    data.forEach(addr => {
+                        const formattedCep = addr.cep.replace(/(\d{5})(\d{3})/, '$1-$2');
+                        resultHTML += `
+                            <div class="address-list-item p-3 border rounded-md" data-cep="${addr.cep.replace(/\D/g, '')}">
+                                <p class="font-medium text-gray-800">${addr.logradouro.toUpperCase()}</p>
+                                <p class="text-sm text-gray-600">${addr.bairro.toUpperCase()}, ${addr.localidade.toUpperCase()} - ${addr.uf}</p>
+                                <p class="text-sm font-semibold text-indigo-600">${formattedCep}</p>
+                            </div>
+                        `;
+                    });
+                    resultHTML += '</div></div>';
+                    cepResultDiv.innerHTML = resultHTML;
+
+                } catch (error) {
+                    cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>Endereço não encontrado. Verifique os dados e tente novamente.</p></div>`;
+                }
+            });
+
+            cepResultDiv.addEventListener('click', (e) => {
+                const addressItem = e.target.closest('.address-list-item');
+                if (addressItem && addressItem.dataset.cep) {
+                    searchByCep(addressItem.dataset.cep);
+                }
+            });
+
+            // --- Lógica de Busca de CNPJ ---
+            const performCnpjSearch = async (cnpjValue) => {
+                 const cnpj = cnpjValue.replace(/\D/g, '');
+                if (cnpj.length !== 14) {
+                    cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center text-red-500"><p>CNPJ inválido. Deve conter 14 dígitos.</p></div>`;
+                    return;
+                }
+                cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center text-gray-500"><p>Buscando...</p></div>`;
+                try {
+                    const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+                    if (!response.ok) throw new Error('CNPJ não encontrado ou inválido.');
+                    const data = await response.json();
+                    
+                    if (!cnpjSearchPerformed) {
+                        cnpjSearchPerformed = true;
+                        updateCnpjSearchView();
+                    }
+                    
+                    const cleanCnpj = data.cnpj.replace(/\D/g, '');
+                    const cnpjaUrl = `https://cnpja.com/office/${cleanCnpj}`;
+                    
+                    const status = data.descricao_situacao_cadastral;
+                    let statusHtml = '';
+                    if (status === 'ATIVA') {
+                        statusHtml = `
+                            <div class="flex items-center gap-2 text-green-600 mt-2 ml-9">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="stroke-width: 1.8px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 20.944a12.02 12.02 0 009 3c4.524 0 8.423-2.43 10.132-6.118a11.954 11.954 0 00-2.516-11.134z" />
+                                </svg>
+                                <span class="font-medium text-sm">Ativa</span>
+                            </div>`;
+                    } else if (status === 'BAIXADA') {
+                        statusHtml = `
+                            <div class="flex items-center gap-4 text-red-600 mt-2 ml-9">
+                                <div class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="stroke-width: 1.8px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 20.944a12.02 12.02 0 009 3c4.524 0 8.423-2.43 10.132-6.118a11.954 11.954 0 00-2.516-11.134z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6" />
+                                    </svg>
+                                    <span class="font-medium text-sm">Baixada</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-gray-500">
+                                    <ion-icon name="calendar-outline"></ion-icon>
+                                    <span class="font-medium text-sm">${formatDate(data.data_situacao_cadastral)}</span>
+                                </div>
+                            </div>`;
+                    }
+
+                    cnpjResultDiv.innerHTML = `
+                        <div class="space-y-4">
+                            <!-- Cabeçalho com Razão Social -->
+                            <div class="bg-white p-6 rounded-xl shadow-sm">
+                               <div class="flex flex-wrap justify-between items-center gap-4">
+                                   <div>
+                                        <div class="flex items-center gap-3">
+                                            <ion-icon name="business-outline" class="text-2xl text-gray-600"></ion-icon>
+                                            <h3 class="text-xl font-bold text-gray-800">${data.razao_social}</h3>
+                                        </div>
+                                        <p class="text-sm text-gray-500 ml-9">${data.nome_fantasia || 'Sem nome fantasia'}</p>
+                                        ${statusHtml}
+                                   </div>
+                                   <a href="${cnpjaUrl}" target="_blank" class="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 flex items-center space-x-2 whitespace-nowrap">
+                                        <ion-icon name="open-outline"></ion-icon>
+                                        <span>Consulta Completa</span>
+                                   </a>
+                               </div>
+                            </div>
+
+                            <!-- Grid Principal -->
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                <!-- Coluna da Esquerda (2/3) -->
+                                <div class="lg:col-span-2 space-y-4">
+                                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Dados Gerais</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 text-sm">
+                                            ${createStyledField('business-outline', 'CNPJ', formatCnpj(data.cnpj))}
+                                            ${createStyledField('information-circle-outline', 'Situação Cadastral', data.descricao_situacao_cadastral)}
+                                            ${createStyledField('calendar-outline', 'Data de Abertura', formatDate(data.data_inicio_atividade))}
+                                            ${createStyledField('expand-outline', 'Porte', data.porte)}
+                                            ${createStyledField('call-outline', 'Telefone', formatPhone(data.ddd_telefone_1))}
+                                            ${createStyledField('mail-outline', 'E-mail', data.email)}
+                                        </div>
+                                    </div>
+                                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Endereço</h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 text-sm">
+                                            ${createStyledField('location-outline', 'Logradouro', `${data.logradouro}, ${data.numero}`)}
+                                            ${createStyledField('map-outline', 'Bairro', data.bairro)}
+                                            ${createStyledField('trail-sign-outline', 'Município', data.municipio)}
+                                            ${createStyledField('locate-outline', 'CEP', data.cep.replace(/(\d{5})(\d{3})/, '$1-$2'))}
+                                        </div>
+                                    </div>
+                                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Atividade Principal (CNAE)</h4>
+                                        <div class="pt-4 text-sm">
+                                            ${createStyledField('briefcase-outline', data.cnae_fiscal, data.cnae_fiscal_descricao, true)}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Coluna da Direita (1/3) -->
+                                <div class="space-y-4">
+                                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Regime Tributário</h4>
+                                        <div class="pt-4 text-sm space-y-3">
+                                            ${createStyledField('cash-outline', 'Opção pelo MEI', data.opcao_pelo_mei ? 'Sim' : 'Não')}
+                                            ${createStyledField('receipt-outline', 'Opção Simples Nacional', data.opcao_pelo_simples ? 'Sim' : 'Não')}
+                                        </div>
+                                    </div>
+                                     <div class="bg-white p-6 rounded-xl shadow-sm">
+                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Quadro Societário</h4>
+                                        <div class="pt-4 text-sm space-y-3 max-h-60 overflow-y-auto">
+                                            ${data.qsa && data.qsa.length > 0 ? data.qsa.map(socio => createStyledField('person-circle-outline', socio.nome_socio, socio.qualificacao_socio)).join('') : '<p class="text-gray-500">Nenhum sócio encontrado.</p>'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                } catch (error) {
+                    cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>${error.message}</p></div>`;
+                }
+            };
+            
+            function updateCnpjSearchView() {
+                if(cnpjSearchPerformed) {
+                    initialCnpjSearchCard.classList.add('hidden');
+                    headerCnpjForm.classList.remove('hidden');
+                } else {
+                    initialCnpjSearchCard.classList.remove('hidden');
+                    headerCnpjForm.classList.add('hidden');
+                }
+            }
+
+            cnpjSearchInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
+            headerCnpjInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
+            cnpjInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
+
+            cnpjSearchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                performCnpjSearch(cnpjSearchInput.value);
+            });
+            headerCnpjForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                performCnpjSearch(headerCnpjInput.value);
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key.toLowerCase() === 'd') {
+                    e.preventDefault();
+                    if (views.cnpj.element.classList.contains('hidden')) {
+                        switchView('cnpj');
+                    }
+                    setTimeout(() => {
+                       if (cnpjSearchPerformed) {
+                            headerCnpjInput.focus();
+                        } else {
+                            cnpjSearchInput.focus();
+                        }
+                    }, 50);
+                }
+            });
+
+
+            // --- Funções Utilitárias ---
+             function expandStreetAbbreviations(street) {
+                if (!street) return '';
+                let processedStreet = street.trim();
+                const abbreviations = [
+                    { pattern: /^rod\./i, replacement: 'Rodovia' },
+                    { pattern: /^rod\b/i, replacement: 'Rodovia' },
+                    { pattern: /^av\./i, replacement: 'Avenida' },
+                    { pattern: /^av\b/i, replacement: 'Avenida' },
+                    { pattern: /^pr\./i, replacement: 'Praça' },
+                    { pattern: /^pr\b/i, replacement: 'Praça' },
+                    { pattern: /^r\./i, replacement: 'Rua' },
+                    { pattern: /^r\b/i, replacement: 'Rua' },
+                    { pattern: /^p\./i, replacement: 'Praça' },
+                    { pattern: /^p\b/i, replacement: 'Praça' }
+                ];
+
+                for (const rule of abbreviations) {
+                    if (rule.pattern.test(processedStreet)) {
+                        processedStreet = processedStreet.replace(rule.pattern, rule.replacement);
+                        break;
+                    }
+                }
+                return processedStreet;
+            }
+
+            function renderViaCepResult(data) {
+                const formattedCep = data.cep.replace(/(\d{5})(\d{3})/, '$1-$2');
+                const fullAddress = `${data.logradouro} - ${data.bairro}, ${data.localidade} - ${data.uf}, ${formattedCep}`;
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+
+                cepResultDiv.innerHTML = `
+                     <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <div class="flex justify-between items-center pb-4 border-b">
+                           <div>
+                                <h3 class="text-xl font-bold text-gray-800 uppercase">${data.logradouro}</h3>
+                                <p class="text-sm text-gray-500 uppercase">${data.bairro}, ${data.localidade} - ${data.uf}</p>
+                           </div>
+                           <a href="${mapsUrl}" target="_blank" class="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 flex items-center space-x-2 whitespace-nowrap">
+                                <ion-icon name="map-outline"></ion-icon>
+                                <span>Ver no Mapa</span>
+                           </a>
+                        </div>
+                        <div class="py-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                                ${createCopyableField('Logradouro', data.logradouro.toUpperCase())}
+                                ${createCopyableField('Bairro', data.bairro.toUpperCase())}
+                                ${createCopyableField('Cidade', data.localidade.toUpperCase())}
+                                ${createCopyableField('Estado', data.uf.toUpperCase())}
+                                ${createCopyableField('CEP', formattedCep)}
+                                ${createCopyableField('IBGE', data.ibge)}
+                            </div>
+                             <div class="mt-4 pt-4 border-t">
+                                ${createStyledField('navigate-outline', 'Endereço Completo', fullAddress.toUpperCase())}
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            async function searchByCep(cep) {
+                const cleanedCep = cep.replace(/\D/g, '');
+                if (cleanedCep.length !== 8) {
+                    cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>CEP inválido. Deve conter 8 dígitos.</p></div>`;
+                    return;
+                }
+                cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500"><p>Buscando...</p></div>`;
+                try {
+                    const response = await fetch(`https://viacep.com.br/ws/${cleanedCep}/json/`);
+                    if (!response.ok) throw new Error('CEP não encontrado.');
+                    const data = await response.json();
+                    if(data.erro) {
+                        throw new Error('CEP não encontrado.');
+                    }
+                    renderViaCepResult(data);
+                } catch (error) {
+                    cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>${error.message}</p></div>`;
+                }
+            }
+
+            function formatDate(dateStr) {
+                if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return 'N/A';
+                const [year, month, day] = dateStr.split('-');
+                return `${day}/${month}/${year}`;
+            }
+            
+            function formatCnpj(value) {
+                if (!value) return "";
+                let cnpj = String(value).replace(/\D/g, '');
+                cnpj = cnpj.replace(/^(\d{2})(\d)/, '$1.$2');
+                cnpj = cnpj.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                cnpj = cnpj.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                cnpj = cnpj.replace(/(\d{4})(\d)/, '$1-$2');
+                return cnpj.slice(0, 18);
+            }
+
+            function formatPhone(phone) {
+                if (!phone || typeof phone !== 'string') return 'N/A';
+                const cleaned = phone.replace(/\D/g, '');
+                if (cleaned.length === 11) { // Celular com 9 + DDD
+                    return `${cleaned.substring(0, 2)} ${cleaned.substring(2, 7)}-${cleaned.substring(7)}`;
+                }
+                if (cleaned.length === 10) { // Fixo + DDD
+                    return `${cleaned.substring(0, 2)} ${cleaned.substring(2, 6)}-${cleaned.substring(6)}`;
+                }
+                return phone;
+            }
+
+            function copyToClipboard(text) {
+                if (!text || text === 'N/A') return;
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('Copiado para a área de transferência!', 'success');
+                } catch (err) {
+                    showToast('Falha ao copiar texto.', 'error');
+                }
+                document.body.removeChild(textarea);
+            }
+
+            document.body.addEventListener('click', (e) => {
+                const copyBtn = e.target.closest('.copy-btn');
+                if (copyBtn) {
+                    copyToClipboard(copyBtn.dataset.text);
+                }
+            });
+
+            function createStyledField(icon, label, value, showLabel = true) {
+                const cleanValue = value || 'N/A';
+                const labelHtml = showLabel ? `<p class="font-medium text-gray-500">${label}</p>` : '';
+                return `
+                    <div class="flex items-start gap-3">
+                        <ion-icon name="${icon}" class="text-lg text-gray-400 mt-0.5"></ion-icon>
+                        <div class="flex-1">
+                            ${labelHtml}
+                            <p class="text-gray-800">${cleanValue}</p>
+                        </div>
+                        <button class="copy-btn" data-text="${cleanValue}" title="Copiar ${label}">
+                            <ion-icon name="copy-outline" class="text-lg"></ion-icon>
+                        </button>
+                    </div>`;
+            }
+
+            function createCopyableField(label, value, showLabel=true) {
+                const cleanValue = value || 'N/A';
+                const labelHtml = showLabel ? `<span class="font-medium text-gray-600">${label}:</span>` : '';
+                return `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            ${labelHtml}
+                            <span class="text-gray-800 ml-2">${cleanValue}</span>
+                        </div>
+                        <button class="copy-btn" data-text="${cleanValue}" title="Copiar ${label}">
+                            <ion-icon name="copy-outline" class="text-lg"></ion-icon>
+                        </button>
+                    </div>`;
+            }
+
+            // Inicialização da parte principal da aplicação
+            renderTable();
+        });
+
+    </script>
+</body>
+</html>
+

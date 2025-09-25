@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão de Fornecedores</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Ionicons CDN para ícones -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,6 +34,11 @@
 
         .sidebar-item-text {
             transition: opacity 0.3s ease-in-out;
+        }
+
+        /* Corrige o problema de clique na barra lateral fechada */
+        #sidebar.w-20 .sidebar-item-text {
+            pointer-events: none;
         }
 
         /* Estilos para o Toast/Notificação */
@@ -75,7 +78,7 @@
             background-color: #f9fafb;
         }
         
-        /* Estilos do Loader de Importação */
+        /* Estilos do Loader de Importação e Carregamento */
         .loader-container {
             display: flex;
             flex-direction: column;
@@ -98,12 +101,46 @@
             40% { transform: scale(1.0); }
         }
 
+        /* Estilos para Células Copiáveis */
+        .copyable-cell {
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .copyable-cell:hover {
+            background-color: #eef2ff; /* indigo-100 */
+        }
+        
+        /* Animação para o ícone de importação */
+        .pulsing-cloud {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+        }
+
     </style>
 </head>
 <body class="bg-gray-100">
+    
+    <div id="initial-loader" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-[100]">
+        <div class="loader-container">
+            <div class="flex space-x-2">
+                <div class="dot-loader dot-1"></div>
+                <div class="dot-loader dot-2"></div>
+                <div class="dot-loader dot-3"></div>
+            </div>
+            <p class="text-gray-600 mt-4">Carregando sistema...</p>
+        </div>
+    </div>
 
-    <!-- Tela de Login / Registro -->
-    <div id="login-view" class="flex items-center justify-center min-h-screen">
+    <div id="login-view" class="hidden flex items-center justify-center min-h-screen">
         <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-xl w-full max-w-md">
             <div class="text-center">
                 <h1 id="login-title" class="text-3xl font-bold text-gray-800" style="color: #3b82f6;">Gestão de Fornecedores</h1>
@@ -168,16 +205,13 @@
         </div>
     </div>
 
-    <!-- Aplicação Principal (inicialmente oculta) -->
     <div id="app-view" class="hidden h-screen w-screen flex">
-        <!-- Sidebar Expansível -->
         <aside id="sidebar" class="bg-gray-800 text-gray-300 w-20 flex flex-col space-y-2 p-2 z-20" style="background-color: var(--sidebar-bg);">
-            <div class="flex items-center justify-between p-2 h-16">
-                <div id="logo-container" class="flex items-center space-x-2 overflow-hidden">
-                    <ion-icon name="business-outline" class="text-3xl min-w-[40px] text-indigo-400"></ion-icon>
-                    <span id="logo-text" class="font-bold text-xl whitespace-nowrap opacity-0 transition-opacity duration-300">SGF</span>
+            <div class="flex items-center p-2 h-16">
+                <div id="logo-container" class="flex items-center overflow-hidden">
+                    <span id="logo-text" class="font-bold text-xl whitespace-nowrap opacity-0 transition-opacity duration-300 pl-3 text-indigo-400">SGF</span>
                 </div>
-                <button id="toggleSidebar" class="p-2 rounded-md hover:bg-gray-700">
+                <button id="toggleSidebar" class="p-2 rounded-md hover:bg-gray-700 ml-auto">
                     <ion-icon name="menu-outline" class="text-2xl"></ion-icon>
                 </button>
             </div>
@@ -195,13 +229,13 @@
                     <ion-icon name="search-circle-outline" class="text-2xl min-w-[40px]"></ion-icon>
                     <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Buscar CNPJ</span>
                 </a>
-                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
-                    <ion-icon name="document-text-outline" class="text-2xl min-w-[40px]"></ion-icon>
-                    <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Relatórios</span>
-                </a>
-                <a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
+                 <a href="#" id="show-settings-view" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
                     <ion-icon name="settings-outline" class="text-2xl min-w-[40px]"></ion-icon>
                     <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Configurações</span>
+                </a>
+                <a href="#" id="background-import-status" title="Importação em andamento..." class="hidden items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
+                    <ion-icon name="cloud-upload-outline" class="text-2xl min-w-[40px] text-indigo-400 pulsing-cloud"></ion-icon>
+                    <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Importando...</span>
                 </a>
             </nav>
 
@@ -213,21 +247,24 @@
             </div>
         </aside>
 
-        <!-- Conteúdo Dinâmico -->
         <div class="flex-1 flex flex-col">
             <header class="bg-white shadow-sm p-4 h-16 flex items-center justify-between z-10">
                 <h1 id="header-title" class="text-2xl font-bold text-gray-800">Gerenciamento de Fornecedores</h1>
-                <div class="flex items-center space-x-4">
-                    <form id="header-cnpj-form" class="hidden w-full max-w-xs relative">
-                        <input type="text" id="headerCnpjInput" placeholder="Pesquisar CNPJ... (CTRL+D)" class="w-full bg-gray-100 pl-4 pr-10 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <ion-icon name="search-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
+                <div id="header-search-container" class="w-full max-w-xs">
+                    <button id="new-cnpj-search-btn" class="hidden w-full bg-indigo-600 text-white px-4 py-2 text-sm rounded-md hover:bg-indigo-700 flex items-center justify-center space-x-2">
+                        <ion-icon name="search-outline"></ion-icon>
+                        <span>Nova Busca (CTRL+D)</span>
+                    </button>
+                    <form id="header-cnpj-form" class="hidden relative">
+                        <label for="headerCnpjInput" class="sr-only">Pesquisar novo CNPJ</label>
+                        <input type="text" id="headerCnpjInput" placeholder="Pesquisar novo CNPJ... (CTRL+D)" class="w-full bg-gray-100 pl-4 pr-10 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="submit" class="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-indigo-600">
+                           <ion-icon name="search-outline" class="text-lg"></ion-icon>
+                        </button>
                     </form>
-                    <ion-icon name="notifications-outline" class="text-2xl text-gray-600 cursor-pointer"></ion-icon>
-                    <div class="w-10 h-10 bg-gray-300 rounded-full bg-cover bg-center" style="background-image: url('https://placehold.co/100x100/EFEFEF/333333?text=J')"></div>
                 </div>
             </header>
 
-            <!-- View Principal: Lista de Fornecedores -->
             <main id="main-view" class="flex-1 p-6 overflow-y-auto">
                 <div class="bg-white p-6 rounded-xl shadow-md">
                     <div class="flex justify-between items-center mb-4">
@@ -239,9 +276,13 @@
                                     <span>Excluir Selecionados</span>
                                 </button>
                             </div>
+                             <button id="export-json-btn" class="bg-green-500 text-white px-4 py-2 text-sm rounded-md hover:bg-green-600 flex items-center space-x-2">
+                                <ion-icon name="download-outline"></ion-icon>
+                                <span>Exportar JSON</span>
+                            </button>
                         </div>
                         <div class="relative">
-                            <input type="text" id="supplier-search-input" placeholder="Buscar fornecedor..." class="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="text" id="supplier-search-input" placeholder="Buscar por Cód, CNPJ, Nome, etc... (CTRL+F)" class="w-96 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <ion-icon name="search-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
                         </div>
                     </div>
@@ -251,9 +292,13 @@
                             <thead class="bg-gray-100" style="background-color: var(--table-header);">
                                 <tr>
                                     <th class="py-3 px-4 w-12"><input type="checkbox" id="select-all-checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"></th>
-                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Cód.</th>
+                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 cursor-pointer whitespace-nowrap" data-sort-key="code">
+                                        <div class="flex items-center">Cód.<ion-icon name="caret-down-outline" class="ml-1 opacity-50"></ion-icon></div>
+                                    </th>
                                     <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">CNPJ</th>
-                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Nome do Fornecedor</th>
+                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 cursor-pointer" data-sort-key="name">
+                                        <div class="flex items-center">Nome do Fornecedor<ion-icon name="caret-down-outline" class="ml-1 opacity-50"></ion-icon></div>
+                                    </th>
                                     <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Cód. Cliente</th>
                                     <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Observações</th>
                                     <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Ações</th>
@@ -269,15 +314,14 @@
                             </tbody>
                         </table>
                     </div>
-                    <div id="pagination-controls" class="flex justify-between items-center mt-4"></div>
+                    <div id="pagination-controls" class="flex flex-wrap justify-center items-center gap-4 mt-4"></div>
                 </div>
             </main>
 
-            <!-- View de Busca de CEP -->
             <div id="cep-search-view" class="flex-1 p-6 overflow-y-auto hidden">
                 <div id="cep-search-container" class="bg-white p-8 rounded-xl shadow-sm mb-6">
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">Buscar Endereço</h2>
-                    <p class="text-gray-500">Busque por CEP ou pelo endereço.</p>
+                    <p class="text-gray-500">Busque por CEP ou pelo endereço. (CTRL+S)</p>
                     
                     <div class="border-b border-gray-200 mt-4">
                         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -332,40 +376,43 @@
                 </div>
             </div>
 
-            <!-- View de Busca de CNPJ -->
             <div id="cnpj-search-view" class="flex-1 p-6 overflow-y-auto hidden">
-                <div id="initial-cnpj-search-card" class="bg-white p-8 rounded-xl shadow-sm mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Buscar Dados por CNPJ</h2>
-                    <form id="cnpj-search-form">
-                        <label for="cnpjSearchInput" class="block text-sm font-medium text-gray-700">Digite o CNPJ</label>
-                        <div class="flex items-center space-x-2 mt-1">
-                            <input type="text" id="cnpjSearchInput" placeholder="00.000.000/0000-00" maxlength="18" class="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                            <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 flex items-center space-x-2">
-                                <ion-icon name="search-outline"></ion-icon>
-                                <span>Buscar</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
                 <div id="cnpj-result">
                     <div class="flex items-center justify-center text-gray-500">
-                        <p>Aguardando busca...</p>
+                        <p>Digite um CNPJ na barra de busca superior para começar.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settings-view" class="flex-1 p-6 overflow-y-auto hidden">
+                <div class="bg-white p-8 rounded-xl shadow-sm max-w-2xl mx-auto">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Configurações da Conta</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">E-mail</p>
+                            <p id="user-email" class="text-lg text-gray-800"></p>
+                        </div>
+                        <div>
+                             <button id="reset-password-btn" class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 flex items-center space-x-2">
+                                <ion-icon name="key-outline"></ion-icon>
+                                <span>Redefinir Senha</span>
+                            </button>
+                            <p class="text-xs text-gray-500 mt-2">Um e-mail será enviado para você com as instruções para criar uma nova senha.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Botão Flutuante para Adicionar -->
     <button id="add-supplier-btn" class="fixed bottom-8 right-8 bg-indigo-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-110 z-30" style="background-color: var(--primary-color);">
         <ion-icon name="add-outline" class="text-3xl"></ion-icon>
     </button>
 
-    <!-- Modal de Cadastro/Edição de Fornecedor -->
     <div id="supplierModal" aria-hidden="true" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl max-h-screen overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">Cadastrar Novo Fornecedor</h2>
+                <h2 id="modal-title" class="text-2xl font-bold text-gray-800">Cadastrar Novo Fornecedor</h2>
                 <button id="closeModalBtn" class="text-gray-500 hover:text-gray-800">
                     <ion-icon name="close-outline" class="text-3xl"></ion-icon>
                 </button>
@@ -426,24 +473,81 @@
                         <div class="dot-loader dot-2"></div>
                         <div class="dot-loader dot-3"></div>
                     </div>
-                    <p class="text-gray-600">Importando fornecedores...</p>
+                    <p class="text-gray-600 mt-4">Importando fornecedores...</p>
                     <p id="import-progress" class="text-sm text-indigo-600 font-medium"></p>
+                    <div class="mt-4 flex space-x-2">
+                        <button id="cancel-import-btn" class="bg-red-500 text-white px-4 py-2 text-sm rounded-md hover:bg-red-600">Cancelar</button>
+                        <button id="run-in-background-btn" class="bg-gray-500 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-600">Rodar em 2º Plano</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Toast de Notificação -->
-    <div id="toast" class="fixed top-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 transform translate-y-[-20px] z-50">
+    <div id="toast" class="fixed top-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 transform translate-y-[-20px] z-[60]">
       <p id="toast-message">Mensagem de erro!</p>
     </div>
 
-    <!-- Firebase SDKs -->
+    <div id="confirmDeleteModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm">
+            <h3 class="text-lg font-bold text-gray-800">Confirmar Exclusão</h3>
+            <p id="confirmMessage" class="mt-2 text-sm text-gray-600">Você tem certeza que deseja excluir os itens selecionados?</p>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="cancelDeleteBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
+                <button id="confirmDeleteBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmDuplicateModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm">
+            <h3 class="text-lg font-bold text-yellow-600">Fornecedor Duplicado</h3>
+            <p id="duplicateMessage" class="mt-2 text-sm text-gray-600">Já existe um fornecedor com este Código ou CNPJ. Deseja cadastrar mesmo assim?</p>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="cancelDuplicateBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Não</button>
+                <button id="confirmDuplicateBtn" class="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition">Sim, Cadastrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="importPreviewModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-bold text-gray-800">Análise de Importação</h3>
+            <div class="mt-4 space-y-2 text-sm">
+                <p>Fornecedores encontrados no arquivo: <span id="preview-total" class="font-bold"></span></p>
+                <p>Fornecedores duplicados (serão ignorados): <span id="preview-duplicates" class="font-bold text-red-600"></span></p>
+                <p>Fornecedores válidos para importar: <span id="preview-valid" class="font-bold text-green-600"></span></p>
+            </div>
+             <div class="mt-6 flex justify-end space-x-3">
+                <button id="cancelImportPreviewBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
+                <button id="confirmImportBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">Importar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="importReportModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-800">Relatório de Importação</h3>
+                <button id="closeImportReportBtn" class="text-gray-500 hover:text-gray-800">
+                    <ion-icon name="close-outline" class="text-3xl"></ion-icon>
+                </button>
+            </div>
+            <div id="importReportContent" class="mt-2 text-sm text-gray-600 max-h-80 overflow-y-auto">
+                </div>
+            <div class="mt-6 flex justify-end">
+                <button id="okImportReportBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">OK</button>
+            </div>
+        </div>
+    </div>
+
+
     <script type="module">
         // UPDATED: Using a newer version of Firebase SDK (v10.12.2)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, serverTimestamp, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
         // Your web app's Firebase configuration
@@ -464,6 +568,9 @@
         // --- Colocar toda a lógica da aplicação dentro do DOMContentLoaded ---
         document.addEventListener('DOMContentLoaded', () => {
 
+            // --- Proxy para contornar problemas de CORS (usando um novo proxy) ---
+            const corsProxy = 'https://api.codetabs.com/v1/proxy/?quest=';
+
             // --- Função de Notificação (Toast) ---
             const showToast = (message, type = 'error') => {
                 const toast = document.getElementById('toast');
@@ -483,6 +590,7 @@
             window.showToast = showToast; 
 
             // --- Lógica de Autenticação ---
+            const initialLoader = document.getElementById('initial-loader');
             const loginView = document.getElementById('login-view');
             const appView = document.getElementById('app-view');
             const authForm = document.getElementById('auth-form');
@@ -505,13 +613,16 @@
             let unsubscribeSuppliers = null;
 
             onAuthStateChanged(auth, user => {
+                initialLoader.classList.add('hidden');
                 if (user) {
+                    loginView.classList.remove('flex');
                     loginView.classList.add('hidden');
                     appView.classList.remove('hidden');
-                    setupRealtimeListener(user.uid);
+                    setupRealtimeListener();
                 } else {
-                    loginView.classList.remove('hidden');
                     appView.classList.add('hidden');
+                    loginView.classList.remove('hidden');
+                    loginView.classList.add('flex');
                      if (unsubscribeSuppliers) {
                         unsubscribeSuppliers();
                     }
@@ -616,20 +727,18 @@
             // --- O restante do código da aplicação ---
             const sidebar = document.getElementById('sidebar');
             const toggleSidebarBtn = document.getElementById('toggleSidebar');
-            // ... (o resto das suas variáveis)
             const logoText = document.getElementById('logo-text');
             const sidebarItemsText = document.querySelectorAll('.sidebar-item-text');
-            const navLinks = sidebar.querySelectorAll('nav a');
-
+            
             const addSupplierBtn = document.getElementById('add-supplier-btn');
             const supplierModal = document.getElementById('supplierModal');
             const closeModalBtn = document.getElementById('closeModalBtn');
             const cancelBtn = document.getElementById('cancelBtn');
             const supplierForm = document.getElementById('supplier-form');
             const supplierTableBody = document.getElementById('supplier-table-body');
+            const tableHead = document.querySelector('#main-view thead');
             
-            const modalTitle = supplierModal.querySelector('h2');
-            const submitButton = supplierForm.querySelector('button[type="submit"]');
+            const modalTitle = document.getElementById('modal-title');
             const editSupplierIdInput = document.getElementById('editSupplierId');
 
             const cnpjInput = document.getElementById('supplierCnpj');
@@ -640,17 +749,20 @@
             const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const paginationControls = document.getElementById('pagination-controls');
+            const supplierSearchInput = document.getElementById('supplier-search-input');
 
             // Views
             const mainView = document.getElementById('main-view');
             const cepSearchView = document.getElementById('cep-search-view');
             const cnpjSearchView = document.getElementById('cnpj-search-view');
+            const settingsView = document.getElementById('settings-view');
             const headerTitle = document.getElementById('header-title');
             
             // Botões de navegação da View
             const showMainViewBtn = document.getElementById('show-main-view');
             const showCepViewBtn = document.getElementById('show-cep-view');
             const showCnpjViewBtn = document.getElementById('show-cnpj-view');
+            const showSettingsViewBtn = document.getElementById('show-settings-view');
 
             // Busca CEP
             const cepForm = document.getElementById('cep-form');
@@ -664,25 +776,58 @@
             const tabByAddress = document.getElementById('tab-by-address');
 
             // Busca CNPJ
-            const initialCnpjSearchCard = document.getElementById('initial-cnpj-search-card');
-            const cnpjSearchForm = document.getElementById('cnpj-search-form');
-            const cnpjSearchInput = document.getElementById('cnpjSearchInput');
             const headerCnpjForm = document.getElementById('header-cnpj-form');
             const headerCnpjInput = document.getElementById('headerCnpjInput');
+            const newCnpjSearchBtn = document.getElementById('new-cnpj-search-btn');
             const cnpjResultDiv = document.getElementById('cnpj-result');
             
-            let suppliers = []; // Nosso "banco de dados" em memória
+            // Modal de Confirmação Exclusão
+            const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+            const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            const confirmMessage = document.getElementById('confirmMessage');
+            let deleteConfirmCallback = null;
+            
+            // Modal de Confirmação Duplicidade
+            const confirmDuplicateModal = document.getElementById('confirmDuplicateModal');
+            const cancelDuplicateBtn = document.getElementById('cancelDuplicateBtn');
+            const confirmDuplicateBtn = document.getElementById('confirmDuplicateBtn');
+            let duplicateConfirmCallback = null;
+
+            // Modal de Relatório de Importação
+            const importReportModal = document.getElementById('importReportModal');
+            const closeImportReportBtn = document.getElementById('closeImportReportBtn');
+            const okImportReportBtn = document.getElementById('okImportReportBtn');
+            const importReportContent = document.getElementById('importReportContent');
+
+            // Modal de Preview de Importação
+            const importPreviewModal = document.getElementById('importPreviewModal');
+            const cancelImportPreviewBtn = document.getElementById('cancelImportPreviewBtn');
+            const confirmImportBtn = document.getElementById('confirmImportBtn');
+            let importDataCache = null;
+
+            // Configurações
+            const userEmailEl = document.getElementById('user-email');
+            const resetPasswordBtn = document.getElementById('reset-password-btn');
+
+            let suppliers = [];
             let currentPage = 1;
             const ROWS_PER_PAGE = 50;
             const selectedSuppliers = new Set();
             let cnpjSearchPerformed = false;
+            let searchFilter = ''; 
+            let searchDebounceTimer;
+            let isImportCancelled = false;
+            let isImportingInBackground = false;
+            let sortConfig = { key: 'timestamp', direction: 'desc' };
             
             // --- Lógica do Firestore ---
-            function setupRealtimeListener(userId) {
-                if (unsubscribeSuppliers) unsubscribeSuppliers(); // Cancela o listener anterior
+            function setupRealtimeListener() {
+                if (unsubscribeSuppliers) unsubscribeSuppliers(); 
                 
-                const suppliersCollectionRef = collection(db, 'suppliers', userId, 'userSuppliers');
-                const q = query(suppliersCollectionRef, orderBy('timestamp', 'desc'));
+                const suppliersCollectionRef = collection(db, 'suppliers_public');
+                // A ordenação inicial será feita no cliente agora
+                const q = query(suppliersCollectionRef);
 
                 unsubscribeSuppliers = onSnapshot(q, (snapshot) => {
                     suppliers = [];
@@ -698,68 +843,206 @@
             
             // --- Lógica de Importação de JSON ---
             const jsonFileInput = document.getElementById('json-file-input');
+            const exportJsonBtn = document.getElementById('export-json-btn');
             const importLoader = document.getElementById('import-loader');
             const modalContent = document.getElementById('modal-content');
             const importProgress = document.getElementById('import-progress');
+            const cancelImportBtn = document.getElementById('cancel-import-btn');
+            const runInBackgroundBtn = document.getElementById('run-in-background-btn');
+            const backgroundImportStatus = document.getElementById('background-import-status');
+
+            closeImportReportBtn.addEventListener('click', () => importReportModal.classList.add('hidden'));
+            okImportReportBtn.addEventListener('click', () => importReportModal.classList.add('hidden'));
+            
+            cancelImportBtn.addEventListener('click', () => {
+                isImportCancelled = true;
+                if(isImportingInBackground){
+                    backgroundImportStatus.classList.add('hidden');
+                    isImportingInBackground = false;
+                }
+                showToast('Importação cancelada pelo usuário.', 'info');
+            });
+            
+            runInBackgroundBtn.addEventListener('click', () => {
+                isImportingInBackground = true;
+                backgroundImportStatus.classList.remove('hidden');
+                closeModal();
+                showToast('A importação continuará em segundo plano.', 'info');
+            });
+
+            backgroundImportStatus.addEventListener('click', () => {
+                if(isImportingInBackground){
+                    supplierModal.classList.remove('hidden');
+                    modalTitle.textContent = "Progresso da Importação";
+                    modalContent.classList.add('hidden');
+                    importLoader.classList.remove('hidden');
+                }
+            });
+
+            function showImportReport(skipped) {
+                if (skipped.length === 0) return;
+
+                let reportHTML = '<ul class="space-y-3">';
+                skipped.forEach(item => {
+                    reportHTML += `
+                        <li class="p-2 border rounded-md bg-gray-50">
+                            <p class="font-semibold text-gray-800">${item.nomeFornecedor || 'Nome não informado'}</p>
+                            <p><span class="font-medium">CNPJ:</span> ${item.cnpj || 'N/A'}</p>
+                            <p><span class="font-medium">Cód:</span> ${item.codFornecedor || 'N/A'}</p>
+                            <p class="text-red-600"><span class="font-medium">Motivo:</span> ${item.motivo}</p>
+                        </li>
+                    `;
+                });
+                reportHTML += '</ul>';
+
+                importReportContent.innerHTML = reportHTML;
+                importReportModal.classList.remove('hidden');
+            }
+            
+            const startImportProcess = (dataToImport) => {
+                isImportCancelled = false;
+                modalTitle.textContent = "Progresso da Importação";
+                modalContent.classList.add('hidden');
+                importLoader.classList.remove('hidden');
+
+                let importedCount = 0;
+                const totalToImport = dataToImport.length;
+                
+                const processChunk = async () => {
+                    if (isImportCancelled) {
+                        closeModal();
+                        if (isImportingInBackground) {
+                            backgroundImportStatus.classList.add('hidden');
+                            isImportingInBackground = false;
+                        }
+                        return;
+                    }
+                    
+                    const batchData = dataToImport.splice(0, 400); // Processa em lotes maiores
+                    if (batchData.length === 0) {
+                        showToast(`${importedCount} fornecedor(es) importado(s) com sucesso!`, 'success');
+                        closeModal();
+                        if (isImportingInBackground) {
+                           backgroundImportStatus.classList.add('hidden');
+                           isImportingInBackground = false;
+                        }
+                        return;
+                    }
+
+                    const firestoreBatch = writeBatch(db);
+                    batchData.forEach(item => {
+                        const newDocRef = doc(collection(db, 'suppliers_public'));
+                        firestoreBatch.set(newDocRef, item);
+                    });
+
+                    await firestoreBatch.commit();
+                    importedCount += batchData.length;
+                    importProgress.textContent = `Processando ${importedCount} de ${totalToImport}...`;
+                    
+                    setTimeout(processChunk, 50); // Pequeno delay para a UI respirar
+                };
+
+                processChunk();
+            };
+
+            cancelImportPreviewBtn.addEventListener('click', () => {
+                importPreviewModal.classList.add('hidden');
+                importDataCache = null;
+            });
+
+            confirmImportBtn.addEventListener('click', () => {
+                importPreviewModal.classList.add('hidden');
+                if (importDataCache && importDataCache.length > 0) {
+                    startImportProcess(importDataCache);
+                }
+                importDataCache = null;
+            });
 
             jsonFileInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (!file || !auth.currentUser) return;
-
+                
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
-                        const importedData = JSON.parse(e.target.result);
-                        if (!Array.isArray(importedData)) {
+                        const jsonData = JSON.parse(e.target.result);
+                        if (!Array.isArray(jsonData)) {
                            throw new Error('O arquivo JSON não contém um array.');
                         }
                         
-                        modalContent.classList.add('hidden');
-                        importLoader.classList.remove('hidden');
-                        
-                        let importedCount = 0;
-                        const totalToImport = importedData.length;
-                        const uid = auth.currentUser.uid;
-                        
-                        const processChunk = async () => {
-                             const batch = importedData.splice(0, 10);
-                             if (batch.length === 0) {
-                                showToast(`${totalToImport} fornecedor(es) importado(s) com sucesso!`, 'success');
-                                closeModal();
-                                return;
-                            }
-                            
-                            const addPromises = batch.map(item => {
-                                 const newSupplier = {
-                                    code: item.codFornecedor || 'N/A',
-                                    cnpj: formatCnpj(String(item.cnpj)) || 'N/A',
+                        // Pré-análise
+                        const suppliersInDb = new Set(suppliers.map(s => s.cnpj));
+                        const codesInDb = new Set(suppliers.map(s => s.code));
+                        const validToImport = [];
+                        const duplicates = [];
+
+                        jsonData.forEach(item => {
+                            const cnpj = formatCnpj(String(item.cnpj));
+                            const code = String(item.codFornecedor);
+
+                            if(suppliersInDb.has(cnpj) || codesInDb.has(code)){
+                                duplicates.push(item);
+                            } else {
+                                validToImport.push({
+                                    code: code,
+                                    cnpj: cnpj,
                                     name: item.nomeFornecedor || 'N/A',
                                     clientCode: String(item.codCliente) || '',
                                     observations: item.centroCusto || '',
                                     timestamp: serverTimestamp()
-                                };
-                                return addDoc(collection(db, 'suppliers', uid, 'userSuppliers'), newSupplier);
-                            });
+                                });
+                                // Adiciona ao Set para evitar duplicidade dentro do próprio JSON
+                                suppliersInDb.add(cnpj);
+                                codesInDb.add(code);
+                            }
+                        });
 
-                            await Promise.all(addPromises);
-                            importedCount += batch.length;
-                            importProgress.textContent = `Processando ${importedCount} de ${totalToImport}...`;
-                            setTimeout(processChunk, 50);
-                        };
-                        processChunk();
+                        document.getElementById('preview-total').textContent = jsonData.length;
+                        document.getElementById('preview-duplicates').textContent = duplicates.length;
+                        document.getElementById('preview-valid').textContent = validToImport.length;
+
+                        importDataCache = validToImport;
+                        importPreviewModal.classList.remove('hidden');
+
                     } catch (error) {
                         showToast(`Erro ao ler o arquivo JSON: ${error.message}`, 'error');
-                         closeModal();
+                    } finally {
+                        jsonFileInput.value = '';
                     }
                 };
                 reader.readAsText(file);
+            });
+            
+            // --- Lógica de Exportação para JSON ---
+            exportJsonBtn.addEventListener('click', () => {
+                const dataToExport = getSortedAndFilteredSuppliers();
+                if(dataToExport.length === 0){
+                    showToast('Nenhum fornecedor para exportar.', 'info');
+                    return;
+                }
+
+                // Remove o campo 'timestamp' para um arquivo mais limpo
+                const cleanedData = dataToExport.map(({timestamp, ...rest}) => rest);
+
+                const jsonString = JSON.stringify(cleanedData, null, 2);
+                const blob = new Blob([jsonString], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'fornecedores.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Exportação iniciada!', 'success');
             });
             
             // --- Lógica de Navegação e Views ---
             const views = {
                 main: { element: mainView, title: 'Gerenciamento de Fornecedores', button: showMainViewBtn },
                 cep: { element: cepSearchView, title: 'Busca por Endereço', button: showCepViewBtn },
-                cnpj: { element: cnpjSearchView, title: 'Busca por CNPJ', button: showCnpjViewBtn }
+                cnpj: { element: cnpjSearchView, title: 'Busca por CNPJ', button: showCnpjViewBtn },
+                settings: { element: settingsView, title: 'Configurações', button: showSettingsViewBtn },
             };
 
             function switchView(viewName) {
@@ -773,11 +1056,29 @@
                 selectedView.button.classList.add('bg-indigo-600', 'text-white');
                 headerTitle.textContent = selectedView.title;
                 addSupplierBtn.style.display = viewName === 'main' ? 'flex' : 'none';
+
+                if (viewName === 'cnpj') {
+                    if(cnpjSearchPerformed) {
+                        newCnpjSearchBtn.classList.remove('hidden');
+                        headerCnpjForm.classList.add('hidden');
+                    } else {
+                        newCnpjSearchBtn.classList.add('hidden');
+                        headerCnpjForm.classList.remove('hidden');
+                    }
+                } else {
+                    newCnpjSearchBtn.classList.add('hidden');
+                    headerCnpjForm.classList.add('hidden');
+                }
+
+                if (viewName === 'settings') {
+                    userEmailEl.textContent = auth.currentUser?.email || 'N/A';
+                }
             }
 
             showMainViewBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('main'); });
             showCepViewBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('cep'); });
             showCnpjViewBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('cnpj'); });
+            showSettingsViewBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('settings'); });
 
             // --- Lógica da Sidebar ---
             toggleSidebarBtn.addEventListener('click', () => {
@@ -794,13 +1095,14 @@
             // --- Lógica do Modal de Fornecedor ---
             window.openModal = (supplierId = null) => {
                 supplierForm.reset();
+                modalTitle.textContent = "Cadastrar Novo Fornecedor";
                 modalContent.classList.remove('hidden');
                 importLoader.classList.add('hidden');
                 if (supplierId) {
                     const supplier = suppliers.find(s => s.id === supplierId);
                     if (!supplier) return;
                     modalTitle.textContent = 'Editar Fornecedor';
-                    submitButton.textContent = 'Salvar Alterações';
+                    document.querySelector('#supplierModal button[type="submit"]').textContent = 'Salvar Alterações';
                     editSupplierIdInput.value = supplier.id;
                     document.getElementById('supplierCode').value = supplier.code;
                     document.getElementById('supplierCnpj').value = supplier.cnpj;
@@ -811,7 +1113,7 @@
                     nameInput.classList.remove('bg-gray-100');
                 } else {
                     modalTitle.textContent = 'Cadastrar Novo Fornecedor';
-                    submitButton.textContent = 'Salvar Fornecedor';
+                    document.querySelector('#supplierModal button[type="submit"]').textContent = 'Salvar Fornecedor';
                     editSupplierIdInput.value = '';
                     nameInput.readOnly = true;
                     nameInput.classList.add('bg-gray-100');
@@ -827,25 +1129,56 @@
                 editSupplierIdInput.value = '';
                 nameInput.readOnly = true;
                 nameInput.classList.add('bg-gray-100');
-                 modalContent.classList.remove('hidden');
+                modalContent.classList.remove('hidden');
                 importLoader.classList.add('hidden');
+                isImportCancelled = false; 
             };
 
             addSupplierBtn.addEventListener('click', () => openModal(null));
             closeModalBtn.addEventListener('click', closeModal);
             cancelBtn.addEventListener('click', closeModal);
-            supplierModal.addEventListener('click', (event) => {
-                if (event.target === supplierModal) closeModal();
+            
+            let mouseDownOnBackdrop = false;
+            supplierModal.addEventListener('mousedown', (event) => {
+                if (event.target === supplierModal) {
+                    mouseDownOnBackdrop = true;
+                }
+            });
+            supplierModal.addEventListener('mouseup', (event) => {
+                if (mouseDownOnBackdrop && event.target === supplierModal) {
+                    closeModal();
+                }
+                mouseDownOnBackdrop = false;
+            });
+            supplierModal.addEventListener('mouseleave', () => {
+                 mouseDownOnBackdrop = false;
             });
 
             // --- Lógica de Submissão do Formulário de Fornecedor ---
-            supplierForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
+            const saveSupplier = async (supplierData, supplierId = null) => {
                  if (!auth.currentUser) {
                     showToast('Você precisa estar logado para salvar.', 'error');
                     return;
                  }
-                 
+                try {
+                    if (supplierId) {
+                        const supplierDocRef = doc(db, 'suppliers_public', supplierId);
+                        await updateDoc(supplierDocRef, supplierData);
+                        showToast('Fornecedor atualizado com sucesso!', 'success');
+                    } else {
+                         const dataToSave = { ...supplierData, timestamp: serverTimestamp() };
+                        await addDoc(collection(db, 'suppliers_public'), dataToSave);
+                        showToast('Fornecedor cadastrado com sucesso!', 'success');
+                    }
+                     closeModal();
+                } catch(error) {
+                     console.error("Erro ao salvar: ", error);
+                     showToast('Erro ao salvar fornecedor.', 'error');
+                }
+            }
+            
+            supplierForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
                 const formData = new FormData(supplierForm);
                 const supplierId = formData.get('editSupplierId');
                 const supplierData = {
@@ -855,36 +1188,157 @@
                     clientCode: formData.get('clientCode'),
                     observations: formData.get('observations'),
                 };
-
-                const uid = auth.currentUser.uid;
-
-                try {
-                    if (supplierId) {
-                        const supplierDocRef = doc(db, 'suppliers', uid, 'userSuppliers', supplierId);
-                        await updateDoc(supplierDocRef, supplierData);
-                        showToast('Fornecedor atualizado com sucesso!', 'success');
-                    } else {
-                         const dataToSave = { ...supplierData, timestamp: serverTimestamp() };
-                        await addDoc(collection(db, 'suppliers', uid, 'userSuppliers'), dataToSave);
-                        showToast('Fornecedor cadastrado com sucesso!', 'success');
+                
+                if (!supplierId) {
+                    const isDuplicate = suppliers.some(s => s.cnpj === supplierData.cnpj || s.code === supplierData.code);
+                    if (isDuplicate) {
+                         duplicateConfirmCallback = () => saveSupplier(supplierData);
+                         confirmDuplicateModal.classList.remove('hidden');
+                         return;
                     }
-                } catch(error) {
-                     console.error("Erro ao salvar: ", error);
-                     showToast('Erro ao salvar fornecedor.', 'error');
                 }
                 
-                closeModal();
+                saveSupplier(supplierData, supplierId);
             });
+            
+            cnpjInput.addEventListener('input', async (e) => {
+                const cnpj = e.target.value.replace(/\D/g, '');
+                if (cnpj.length < 14) {
+                    nameInput.value = '';
+                    nameInput.readOnly = true;
+                    nameInput.classList.add('bg-gray-100');
+                    return;
+                }
+                if (cnpj.length === 14) {
+                    cnpjLoader.classList.remove('hidden');
+                    nameInput.value = 'Buscando...';
+                    try {
+                        const response = await fetch(`${corsProxy}https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => null);
+                            throw { status: response.status, data: errorData };
+                        }
+                        const data = await response.json();
+                        nameInput.value = data.razao_social || '';
+                        nameInput.readOnly = false; 
+                        nameInput.classList.remove('bg-gray-100');
+                    } catch (error) {
+                        handleApiError(error, 'Busca de CNPJ no Modal');
+                        nameInput.value = '';
+                        nameInput.readOnly = false;
+                        nameInput.classList.remove('bg-gray-100');
+                    } finally {
+                        cnpjLoader.classList.add('hidden');
+                    }
+                }
+            });
+
+            // --- Lógica de Ordenação e Filtro da Tabela ---
+            function getSortedAndFilteredSuppliers() {
+                // Filtragem
+                const searchTerm = searchFilter.toLowerCase().trim();
+                let filteredSuppliers = suppliers;
+
+                if (searchTerm) {
+                    const cleanSearchTerm = searchTerm.replace(/\D/g, '');
+                    filteredSuppliers = suppliers.filter(supplier => {
+                        const cleanCnpj = (supplier.cnpj || '').replace(/\D/g, '');
+                        return (
+                            (supplier.code || '').toLowerCase().includes(searchTerm) ||
+                            (supplier.name || '').toLowerCase().includes(searchTerm) ||
+                            (supplier.clientCode || '').toLowerCase().includes(searchTerm) ||
+                            (supplier.observations || '').toLowerCase().includes(searchTerm) ||
+                            (cleanCnpj.includes(cleanSearchTerm) && cleanSearchTerm.length > 0)
+                        );
+                    });
+                }
+                
+                // CORREÇÃO 2: Lógica de ordenação robusta para tratar strings, números e timestamps
+                const sorted = [...filteredSuppliers].sort((a, b) => {
+                    const key = sortConfig.key;
+                    const direction = sortConfig.direction === 'asc' ? 1 : -1;
+                    
+                    const valA = a[key];
+                    const valB = b[key];
+
+                    if (valA === null || valA === undefined) return 1 * direction;
+                    if (valB === null || valB === undefined) return -1 * direction;
+
+                    // Ordenação para Timestamps do Firebase
+                    if (key === 'timestamp' && valA && typeof valA.toMillis === 'function') {
+                        return (valA.toMillis() - valB.toMillis()) * direction;
+                    }
+                    
+                    // Ordenação numérica para o código
+                    if (key === 'code') {
+                       return (Number(valA) - Number(valB)) * direction;
+                    }
+
+                    // Ordenação de texto padrão para outros campos
+                    return String(valA).localeCompare(String(valB), 'pt-BR', { sensitivity: 'base' }) * direction;
+                });
+                return sorted;
+            }
+
+            supplierSearchInput.addEventListener('input', (e) => {
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    searchFilter = e.target.value;
+                    currentPage = 1;
+                    renderTable();
+                }, 300); 
+            });
+
+             tableHead.addEventListener('click', (e) => {
+                const header = e.target.closest('[data-sort-key]');
+                if (!header) return;
+
+                const key = header.dataset.sortKey;
+                if (sortConfig.key === key) {
+                    sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortConfig.key = key;
+                    sortConfig.direction = 'asc';
+                }
+                
+                currentPage = 1;
+                renderTable();
+            });
+
+            // --- Lógica de Cópia da Tabela ---
+            supplierTableBody.addEventListener('click', (e) => {
+                const cell = e.target.closest('td.copyable-cell');
+                if (cell) {
+                    const textToCopy = cell.textContent.trim();
+                    if (textToCopy) {
+                        copyToClipboard(textToCopy);
+                    }
+                }
+            });
+
 
             // --- Lógica de Renderização da Tabela ---
             function renderTable() {
+                // Atualiza ícones de ordenação
+                document.querySelectorAll('thead th[data-sort-key]').forEach(th => {
+                    const icon = th.querySelector('ion-icon');
+                    if (th.dataset.sortKey === sortConfig.key) {
+                        icon.name = sortConfig.direction === 'asc' ? 'caret-up-outline' : 'caret-down-outline';
+                        icon.classList.remove('opacity-50');
+                    } else {
+                        icon.name = 'caret-down-outline';
+                        icon.classList.add('opacity-50');
+                    }
+                });
+                
+                const processedSuppliers = getSortedAndFilteredSuppliers();
                 supplierTableBody.innerHTML = '';
                 const start = (currentPage - 1) * ROWS_PER_PAGE;
                 const end = start + ROWS_PER_PAGE;
-                const paginatedSuppliers = suppliers.slice(start, end);
+                const paginatedSuppliers = processedSuppliers.slice(start, end);
 
-                if (suppliers.length === 0) {
-                     supplierTableBody.innerHTML = `<tr id="no-suppliers-row"><td colspan="7" class="text-center py-10 text-gray-500"><ion-icon name="file-tray-outline" class="text-4xl mx-auto"></ion-icon><p class="mt-2">Nenhum fornecedor cadastrado ainda.</p></td></tr>`;
+                if (processedSuppliers.length === 0) {
+                     supplierTableBody.innerHTML = `<tr id="no-suppliers-row"><td colspan="7" class="text-center py-10 text-gray-500"><ion-icon name="file-tray-outline" class="text-4xl mx-auto"></ion-icon><p class="mt-2">Nenhum fornecedor encontrado.</p></td></tr>`;
                 } else {
                     paginatedSuppliers.forEach(supplier => {
                         const isChecked = selectedSuppliers.has(supplier.id);
@@ -892,65 +1346,82 @@
                         tr.className = `border-b hover:bg-gray-50 ${isChecked ? 'bg-indigo-50' : ''}`;
                         tr.innerHTML = `
                             <td class="py-3 px-4 w-12"><input type="checkbox" class="row-checkbox h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" data-id="${supplier.id}" ${isChecked ? 'checked' : ''}></td>
-                            <td class="py-3 px-4">${supplier.code}</td>
-                            <td class="py-3 px-4">${supplier.cnpj}</td>
-                            <td class="py-3 px-4 font-medium">${supplier.name}</td>
-                            <td class="py-3 px-4">${supplier.clientCode || 'N/A'}</td>
-                            <td class="py-3 px-4 text-sm text-gray-500 max-w-[200px] truncate" title="${supplier.observations || ''}">${supplier.observations || 'N/A'}</td>
+                            <td class="py-3 px-4 copyable-cell whitespace-nowrap">${supplier.code}</td>
+                            <td class="py-3 px-4 copyable-cell">${supplier.cnpj}</td>
+                            <td class="py-3 px-4 font-medium copyable-cell">${supplier.name}</td>
+                            <td class="py-3 px-4 copyable-cell">${supplier.clientCode || ''}</td>
+                            <td class="py-3 px-4 text-sm text-gray-500 max-w-[200px] truncate copyable-cell" title="${supplier.observations || ''}">${supplier.observations || ''}</td>
                             <td class="py-3 px-4">
                                 <div class="flex space-x-2">
                                     <button onclick="openModal('${supplier.id}')" class="text-indigo-600 hover:text-indigo-800 p-1"><ion-icon name="create-outline"></ion-icon></button>
-                                    <button onclick="deleteSupplier('${supplier.id}')" class="text-red-600 hover:text-red-800 p-1"><ion-icon name="trash-outline"></ion-icon></button>
                                 </div>
                             </td>
                         `;
                         supplierTableBody.appendChild(tr);
                     });
                 }
-                renderPagination();
+                renderPagination(processedSuppliers.length);
                 updateBulkActionsUI();
             }
 
-            // --- Lógica de Deletar, Paginação, etc. ---
-             window.deleteSupplier = async (id) => {
-                if (!auth.currentUser) return;
-                try {
-                    await deleteDoc(doc(db, 'suppliers', auth.currentUser.uid, 'userSuppliers', id));
-                    showToast('Fornecedor removido.', 'info');
-                } catch (error) {
-                    showToast('Erro ao remover fornecedor.', 'error');
-                }
-            };
-            function renderPagination() {
+            // --- Lógica de Paginação e Exclusão em Massa ---
+            function renderPagination(totalItems) {
                 paginationControls.innerHTML = '';
-                const totalSuppliers = suppliers.length;
-                const totalPages = Math.ceil(totalSuppliers / ROWS_PER_PAGE);
-                let infoHTML = `<div class="text-sm text-gray-600">Mostrando ${Math.min(totalSuppliers, 1 + (currentPage - 1) * ROWS_PER_PAGE)} a ${Math.min(currentPage * ROWS_PER_PAGE, totalSuppliers)} de ${totalSuppliers}</div>`;
+                const totalPages = Math.ceil(totalItems / ROWS_PER_PAGE);
+                
+                if (totalItems === 0) return;
+
+                const infoHTML = `<div class="text-sm text-gray-600">Mostrando ${Math.min(totalItems, 1 + (currentPage - 1) * ROWS_PER_PAGE)} a ${Math.min(currentPage * ROWS_PER_PAGE, totalItems)} de ${totalItems}</div>`;
+                
                 if (totalPages <= 1) {
                     paginationControls.innerHTML = infoHTML;
                     return;
                 }
+
                 let buttonsHTML = `<div class="flex items-center">`;
                 buttonsHTML += `<button onclick="changePage(${currentPage - 1})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>`;
-                for (let i = 1; i <= totalPages; i++) {
+                
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, currentPage + 2);
+
+                if (startPage > 1) {
+                    buttonsHTML += `<button onclick="changePage(1)" class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-white text-gray-700 hover:bg-gray-100">1</button>`;
+                    if (startPage > 2) {
+                       buttonsHTML += `<span class="px-3 py-1 mx-1 text-sm font-medium text-gray-500">...</span>`;
+                    }
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
                      if (i === currentPage) {
                         buttonsHTML += `<button class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-indigo-600 text-white">${i}</button>`;
                     } else {
                         buttonsHTML += `<button onclick="changePage(${i})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-white text-gray-700 hover:bg-gray-100">${i}</button>`;
                     }
                 }
+
+                 if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                         buttonsHTML += `<span class="px-3 py-1 mx-1 text-sm font-medium text-gray-500">...</span>`;
+                    }
+                    buttonsHTML += `<button onclick="changePage(${totalPages})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-white text-gray-700 hover:bg-gray-100">${totalPages}</button>`;
+                }
+
                 buttonsHTML += `<button onclick="changePage(${currentPage + 1})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}" ${currentPage === totalPages ? 'disabled' : ''}>Próximo</button>`;
                 buttonsHTML += `</div>`;
-                paginationControls.innerHTML = infoHTML + buttonsHTML;
+
+                paginationControls.innerHTML = `${infoHTML} ${buttonsHTML}`;
             }
+
             window.changePage = (newPage) => {
-                const totalPages = Math.ceil(suppliers.length / ROWS_PER_PAGE);
+                const totalItems = getSortedAndFilteredSuppliers().length;
+                const totalPages = Math.ceil(totalItems / ROWS_PER_PAGE);
                 if (newPage >= 1 && newPage <= totalPages) {
                     currentPage = newPage;
                     selectAllCheckbox.checked = false;
                     renderTable();
                 }
             }
+
             function updateBulkActionsUI() {
                 if (selectedSuppliers.size > 0) {
                     bulkActionsContainer.classList.remove('hidden');
@@ -979,20 +1450,99 @@
                     renderTable();
                 }
             });
-            bulkDeleteBtn.addEventListener('click', async () => {
-                 if (!auth.currentUser) return;
-                const uid = auth.currentUser.uid;
-                const deletePromises = Array.from(selectedSuppliers).map(id => deleteDoc(doc(db, 'suppliers', uid, 'userSuppliers', id)));
-                 const totalDeleted = selectedSuppliers.size;
+
+            // Lógica do Modal de Confirmação de Exclusão
+            cancelDeleteBtn.addEventListener('click', () => {
+                confirmDeleteModal.classList.add('hidden');
+                deleteConfirmCallback = null;
+            });
+
+            confirmDeleteBtn.addEventListener('click', () => {
+                if(typeof deleteConfirmCallback === 'function') {
+                    deleteConfirmCallback();
+                }
+                confirmDeleteModal.classList.add('hidden');
+                deleteConfirmCallback = null;
+            });
+            
+            // Lógica do Modal de Confirmação de Duplicidade
+            cancelDuplicateBtn.addEventListener('click', () => {
+                confirmDuplicateModal.classList.add('hidden');
+                duplicateConfirmCallback = null;
+            });
+
+            confirmDuplicateBtn.addEventListener('click', () => {
+                if(typeof duplicateConfirmCallback === 'function') {
+                    duplicateConfirmCallback();
+                }
+                confirmDuplicateModal.classList.add('hidden');
+                duplicateConfirmCallback = null;
+            });
+            
+            bulkDeleteBtn.addEventListener('click', () => {
+                if (selectedSuppliers.size === 0) return;
+
+                confirmMessage.textContent = `Você tem certeza que deseja excluir ${selectedSuppliers.size} fornecedor(es) selecionado(s)?`;
+                
+                deleteConfirmCallback = async () => {
+                    if (!auth.currentUser) return;
+                    
+                    const deletePromises = Array.from(selectedSuppliers).map(id => deleteDoc(doc(db, 'suppliers_public', id)));
+                    const totalDeleted = selectedSuppliers.size;
+                    try {
+                        await Promise.all(deletePromises);
+                        showToast(`${totalDeleted} fornecedor(es) removido(s).`, 'info');
+                    } catch(error) {
+                        showToast('Erro ao remover fornecedores.', 'error');
+                    } finally {
+                        selectedSuppliers.clear();
+                        selectAllCheckbox.checked = false;
+                    }
+                };
+
+                confirmDeleteModal.classList.remove('hidden');
+            });
+
+             // --- Lógica de Configurações ---
+            resetPasswordBtn.addEventListener('click', async () => {
+                const user = auth.currentUser;
+                if(!user) {
+                    showToast('Você precisa estar logado para redefinir a senha.', 'error');
+                    return;
+                }
                 try {
-                    await Promise.all(deletePromises);
-                    showToast(`${totalDeleted} fornecedor(es) removido(s).`, 'info');
-                } catch(error) {
-                     showToast('Erro ao remover fornecedores.', 'error');
-                } finally {
-                    selectedSuppliers.clear();
+                    await sendPasswordResetEmail(auth, user.email);
+                    showToast(`E-mail de redefinição enviado para ${user.email}`, 'success');
+                } catch (error) {
+                    console.error("Erro ao enviar e-mail de redefinição:", error);
+                    showToast('Falha ao enviar e-mail de redefinição. Tente novamente.', 'error');
                 }
             });
+
+            // --- Tratamento de Erros de API ---
+            function handleApiError(error, context) {
+                console.error(`Erro em ${context}:`, error);
+                let message = `Ocorreu um erro inesperado em '${context}'.`;
+
+                if (error instanceof TypeError) { // Erro de rede
+                    message = "Falha na conexão. Verifique sua internet.";
+                } else if (error && error.status) { // Erro de HTTP
+                    switch (error.status) {
+                        case 400:
+                            message = `Requisição inválida para ${context}. Verifique os dados enviados.`;
+                            break;
+                        case 404:
+                            message = `${context}: O CEP ou CNPJ informado não foi encontrado.`;
+                            break;
+                        case 429:
+                            message = `Muitas solicitações para ${context}. Tente novamente em alguns instantes.`;
+                            break;
+                        default:
+                             message = `Erro ${error.status} ao consultar ${context}. Tente mais tarde.`;
+                    }
+                }
+                showToast(message, 'error');
+            }
 
             // --- Lógica de Busca de CEP ---
             tabByCep.addEventListener('click', () => {
@@ -1042,10 +1592,10 @@
                 const encodedStreet = encodeURIComponent(street);
                 
                 try {
-                    const response = await fetch(`https://viacep.com.br/ws/${encodedUf}/${encodedCity}/${encodedStreet}/json/`);
-                    if (!response.ok) throw new Error('Ocorreu um erro na comunicação com o serviço de busca.');
-                    const data = await response.json();
+                    const response = await fetch(`${corsProxy}https://viacep.com.br/ws/${encodedUf}/${encodedCity}/${encodedStreet}/json/`);
+                    if (!response.ok) throw { status: response.status };
 
+                    const data = await response.json();
                     if (data.erro || data.length === 0) {
                          cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500"><p>Nenhum endereço encontrado com os critérios informados.</p></div>`;
                          return;
@@ -1071,6 +1621,7 @@
                     cepResultDiv.innerHTML = resultHTML;
 
                 } catch (error) {
+                    handleApiError(error, 'Busca por Endereço');
                     cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>Endereço não encontrado. Verifique os dados e tente novamente.</p></div>`;
                 }
             });
@@ -1086,18 +1637,20 @@
             const performCnpjSearch = async (cnpjValue) => {
                  const cnpj = cnpjValue.replace(/\D/g, '');
                 if (cnpj.length !== 14) {
-                    cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center text-red-500"><p>CNPJ inválido. Deve conter 14 dígitos.</p></div>`;
+                    showToast('CNPJ inválido. Deve conter 14 dígitos.', 'error');
                     return;
                 }
                 cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center text-gray-500"><p>Buscando...</p></div>`;
                 try {
-                    const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
-                    if (!response.ok) throw new Error('CNPJ não encontrado ou inválido.');
+                    const response = await fetch(`${corsProxy}https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => null);
+                        throw { status: response.status, data: errorData };
+                    }
                     const data = await response.json();
                     
                     if (!cnpjSearchPerformed) {
                         cnpjSearchPerformed = true;
-                        updateCnpjSearchView();
                     }
                     
                     const cleanCnpj = data.cnpj.replace(/\D/g, '');
@@ -1107,41 +1660,46 @@
                     let statusHtml = '';
                     if (status === 'ATIVA') {
                         statusHtml = `
-                            <div class="flex items-center gap-2 text-green-600 mt-2 ml-9">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="stroke-width: 1.8px;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 20.944a12.02 12.02 0 009 3c4.524 0 8.423-2.43 10.132-6.118a11.954 11.954 0 00-2.516-11.134z" />
+                            <div class="flex items-center gap-2 text-sm font-medium ml-3">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="10" fill="#22C55E"></circle>
+                                    <path d="M8.5 12.5L11 15L15.5 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                <span class="font-medium text-sm">Ativa</span>
+                                <span class="text-green-700">Ativa</span>
                             </div>`;
                     } else if (status === 'BAIXADA') {
                         statusHtml = `
-                            <div class="flex items-center gap-4 text-red-600 mt-2 ml-9">
-                                <div class="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="stroke-width: 1.8px;">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 20.944a12.02 12.02 0 009 3c4.524 0 8.423-2.43 10.132-6.118a11.954 11.954 0 00-2.516-11.134z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6" />
+                            <div class="flex items-center gap-4 ml-3">
+                                <div class="flex items-center gap-2 text-sm font-medium">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="12" cy="12" r="10" fill="#EF4444"></circle>
+                                        <path d="M15 9L9 15M9 9L15 15" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                                     </svg>
-                                    <span class="font-medium text-sm">Baixada</span>
+                                    <span class="text-red-700">Baixada</span>
                                 </div>
-                                <div class="flex items-center gap-2 text-gray-500">
+                                <div class="flex items-center gap-1.5 text-xs text-gray-500">
                                     <ion-icon name="calendar-outline"></ion-icon>
-                                    <span class="font-medium text-sm">${formatDate(data.data_situacao_cadastral)}</span>
+                                    <span>${formatDate(data.data_situacao_cadastral)}</span>
                                 </div>
                             </div>`;
+                    }
+                    
+                    const renderCnaes = (cnaes) => {
+                        if (!cnaes || cnaes.length === 0) return '<p class="text-gray-500">Nenhuma atividade secundária encontrada.</p>';
+                        return cnaes.map(cnae => createStyledField('ellipse-outline', cnae.codigo, cnae.descricao, true)).join('');
                     }
 
                     cnpjResultDiv.innerHTML = `
                         <div class="space-y-4">
-                            <!-- Cabeçalho com Razão Social -->
                             <div class="bg-white p-6 rounded-xl shadow-sm">
-                               <div class="flex flex-wrap justify-between items-center gap-4">
+                               <div class="flex flex-wrap justify-between items-start gap-4">
                                    <div>
-                                        <div class="flex items-center gap-3">
+                                        <div class="flex items-center gap-3 mb-1">
                                             <ion-icon name="business-outline" class="text-2xl text-gray-600"></ion-icon>
                                             <h3 class="text-xl font-bold text-gray-800">${data.razao_social}</h3>
+                                            ${statusHtml}
                                         </div>
-                                        <p class="text-sm text-gray-500 ml-9">${data.nome_fantasia || 'Sem nome fantasia'}</p>
-                                        ${statusHtml}
+                                        <p class="text-sm text-gray-500 pl-9">${data.nome_fantasia || 'Sem nome fantasia'}</p>
                                    </div>
                                    <a href="${cnpjaUrl}" target="_blank" class="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 flex items-center space-x-2 whitespace-nowrap">
                                         <ion-icon name="open-outline"></ion-icon>
@@ -1150,45 +1708,44 @@
                                </div>
                             </div>
 
-                            <!-- Grid Principal -->
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                                <!-- Coluna da Esquerda (2/3) -->
                                 <div class="lg:col-span-2 space-y-4">
                                     <div class="bg-white p-6 rounded-xl shadow-sm">
                                         <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Dados Gerais</h4>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 text-sm">
                                             ${createStyledField('business-outline', 'CNPJ', formatCnpj(data.cnpj))}
-                                            ${createStyledField('information-circle-outline', 'Situação Cadastral', data.descricao_situacao_cadastral)}
+                                            ${createStyledField('information-circle-outline', 'Situação Cadastral', `${data.descricao_situacao_cadastral} desde ${formatDate(data.data_situacao_cadastral)}`)}
                                             ${createStyledField('calendar-outline', 'Data de Abertura', formatDate(data.data_inicio_atividade))}
                                             ${createStyledField('expand-outline', 'Porte', data.porte)}
-                                            ${createStyledField('call-outline', 'Telefone', formatPhone(data.ddd_telefone_1))}
-                                            ${createStyledField('mail-outline', 'E-mail', data.email)}
+                                            ${createStyledField('call-outline', 'Telefone', formatPhone(data.ddd_telefone_1) || 'Não informado')}
+                                            ${createStyledField('mail-outline', 'E-mail', data.email || 'Não informado')}
+                                            ${createStyledField('document-text-outline', 'Natureza Jurídica', data.natureza_juridica)}
+                                            ${createStyledField('cash-outline', 'Capital Social', Number(data.capital_social).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))}
                                         </div>
                                     </div>
                                     <div class="bg-white p-6 rounded-xl shadow-sm">
                                         <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Endereço</h4>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 text-sm">
                                             ${createStyledField('location-outline', 'Logradouro', `${data.logradouro}, ${data.numero}`)}
+                                            ${createStyledField('cube-outline', 'Complemento', data.complemento)}
                                             ${createStyledField('map-outline', 'Bairro', data.bairro)}
-                                            ${createStyledField('trail-sign-outline', 'Município', data.municipio)}
+                                            ${createStyledField('trail-sign-outline', 'Município / UF', `${data.municipio} / ${data.uf}`)}
                                             ${createStyledField('locate-outline', 'CEP', data.cep.replace(/(\d{5})(\d{3})/, '$1-$2'))}
                                         </div>
                                     </div>
+                                </div>
+
+                                <div class="space-y-4">
                                     <div class="bg-white p-6 rounded-xl shadow-sm">
                                         <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Atividade Principal (CNAE)</h4>
                                         <div class="pt-4 text-sm">
                                             ${createStyledField('briefcase-outline', data.cnae_fiscal, data.cnae_fiscal_descricao, true)}
                                         </div>
                                     </div>
-                                </div>
-
-                                <!-- Coluna da Direita (1/3) -->
-                                <div class="space-y-4">
-                                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Regime Tributário</h4>
-                                        <div class="pt-4 text-sm space-y-3">
-                                            ${createStyledField('cash-outline', 'Opção pelo MEI', data.opcao_pelo_mei ? 'Sim' : 'Não')}
-                                            ${createStyledField('receipt-outline', 'Opção Simples Nacional', data.opcao_pelo_simples ? 'Sim' : 'Não')}
+                                     <div class="bg-white p-6 rounded-xl shadow-sm">
+                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Atividades Secundárias</h4>
+                                        <div class="pt-4 text-sm space-y-3 max-h-48 overflow-y-auto">
+                                            ${renderCnaes(data.cnaes_secundarios)}
                                         </div>
                                     </div>
                                      <div class="bg-white p-6 rounded-xl shadow-sm">
@@ -1201,46 +1758,65 @@
                             </div>
                         </div>`;
                 } catch (error) {
-                    cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>${error.message}</p></div>`;
+                    handleApiError(error, 'Busca de CNPJ');
+                    cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>Falha ao buscar CNPJ. Verifique o número e tente novamente.</p></div>`;
+                } finally {
+                    headerCnpjForm.classList.add('hidden');
+                    newCnpjSearchBtn.classList.remove('hidden');
                 }
             };
             
-            function updateCnpjSearchView() {
-                if(cnpjSearchPerformed) {
-                    initialCnpjSearchCard.classList.add('hidden');
-                    headerCnpjForm.classList.remove('hidden');
-                } else {
-                    initialCnpjSearchCard.classList.remove('hidden');
-                    headerCnpjForm.classList.add('hidden');
-                }
-            }
-
-            cnpjSearchInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
             headerCnpjInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
             cnpjInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
 
-            cnpjSearchForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                performCnpjSearch(cnpjSearchInput.value);
-            });
             headerCnpjForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 performCnpjSearch(headerCnpjInput.value);
             });
+            newCnpjSearchBtn.addEventListener('click', () => {
+                newCnpjSearchBtn.classList.add('hidden');
+                headerCnpjForm.classList.remove('hidden');
+                headerCnpjInput.focus();
+            });
             
             document.addEventListener('keydown', (e) => {
+                let shortcut_triggered = false;
+                
+                if (e.ctrlKey && e.key.toLowerCase() === 'g') {
+                    shortcut_triggered = true;
+                    openModal(null);
+                }
+
+                if (e.ctrlKey && e.key.toLowerCase() === 'f') {
+                    shortcut_triggered = true;
+                    switchView('main');
+                    setTimeout(() => supplierSearchInput.focus(), 50);
+                }
+                
+                if (e.ctrlKey && e.key.toLowerCase() === 's') {
+                    shortcut_triggered = true;
+                    switchView('cep');
+                    setTimeout(() => cepInput.focus(), 50);
+                }
+
                 if (e.ctrlKey && e.key.toLowerCase() === 'd') {
-                    e.preventDefault();
-                    if (views.cnpj.element.classList.contains('hidden')) {
+                    shortcut_triggered = true;
+                    const isOnCnpjView = !cnpjSearchView.classList.contains('hidden');
+                    if (!isOnCnpjView) {
                         switchView('cnpj');
                     }
+                    
                     setTimeout(() => {
-                       if (cnpjSearchPerformed) {
+                        if (newCnpjSearchBtn.classList.contains('hidden')) {
                             headerCnpjInput.focus();
                         } else {
-                            cnpjSearchInput.focus();
+                            newCnpjSearchBtn.click();
                         }
                     }, 50);
+                }
+
+                if(shortcut_triggered) {
+                    e.preventDefault();
                 }
             });
 
@@ -1307,20 +1883,22 @@
             async function searchByCep(cep) {
                 const cleanedCep = cep.replace(/\D/g, '');
                 if (cleanedCep.length !== 8) {
-                    cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>CEP inválido. Deve conter 8 dígitos.</p></div>`;
+                    showToast('CEP inválido. Deve conter 8 dígitos.', 'error');
                     return;
                 }
                 cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500"><p>Buscando...</p></div>`;
                 try {
-                    const response = await fetch(`https://viacep.com.br/ws/${cleanedCep}/json/`);
-                    if (!response.ok) throw new Error('CEP não encontrado.');
+                    const response = await fetch(`${corsProxy}https://viacep.com.br/ws/${cleanedCep}/json/`);
+                    if (!response.ok) throw { status: response.status };
+
                     const data = await response.json();
                     if(data.erro) {
-                        throw new Error('CEP não encontrado.');
+                        throw { status: 404 }; // Simula um 404 para CEP não encontrado
                     }
                     renderViaCepResult(data);
                 } catch (error) {
-                    cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>${error.message}</p></div>`;
+                    handleApiError(error, 'Busca por CEP');
+                    cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>Falha ao buscar CEP. Verifique o número e tente novamente.</p></div>`;
                 }
             }
 
@@ -1341,7 +1919,7 @@
             }
 
             function formatPhone(phone) {
-                if (!phone || typeof phone !== 'string') return 'N/A';
+                if (!phone || typeof phone !== 'string') return '';
                 const cleaned = phone.replace(/\D/g, '');
                 if (cleaned.length === 11) { // Celular com 9 + DDD
                     return `${cleaned.substring(0, 2)} ${cleaned.substring(2, 7)}-${cleaned.substring(7)}`;
@@ -1353,7 +1931,7 @@
             }
 
             function copyToClipboard(text) {
-                if (!text || text === 'N/A') return;
+                if (!text) return;
                 const textarea = document.createElement('textarea');
                 textarea.value = text;
                 document.body.appendChild(textarea);
@@ -1375,7 +1953,7 @@
             });
 
             function createStyledField(icon, label, value, showLabel = true) {
-                const cleanValue = value || 'N/A';
+                const cleanValue = value || 'Não informado';
                 const labelHtml = showLabel ? `<p class="font-medium text-gray-500">${label}</p>` : '';
                 return `
                     <div class="flex items-start gap-3">
@@ -1391,7 +1969,7 @@
             }
 
             function createCopyableField(label, value, showLabel=true) {
-                const cleanValue = value || 'N/A';
+                const cleanValue = value || 'Não informado';
                 const labelHtml = showLabel ? `<span class="font-medium text-gray-600">${label}:</span>` : '';
                 return `
                     <div class="flex justify-between items-center">

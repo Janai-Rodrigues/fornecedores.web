@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="imagens/favicon.ico" type="image/x-icon">
     <style>
         /* Estilos personalizados */
         :root {
@@ -48,36 +51,64 @@
 
         /* Animação de entrada do Modal */
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
+
         @keyframes slideIn {
-            from { transform: translateY(-30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
+
+        .modal {
+            transition: opacity 0.3s ease-out;
+        }
+
+        .modal>div>div {
+            /* Target the inner div for transform animation */
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        }
+
         .modal[aria-hidden="false"] {
             animation: fadeIn 0.3s ease-out forwards;
         }
-        .modal[aria-hidden="false"] > div {
+
+        .modal[aria-hidden="false"]>div {
             animation: slideIn 0.4s ease-out forwards;
         }
+
         .copy-btn {
             background: none;
             border: none;
             cursor: pointer;
             color: #9ca3af;
         }
+
         .copy-btn:hover {
             color: var(--primary-color);
         }
+
         .address-list-item {
             cursor: pointer;
             transition: background-color 0.2s;
         }
+
         .address-list-item:hover {
             background-color: #f9fafb;
         }
-        
+
         /* Estilos do Loader de Importação e Carregamento */
         .loader-container {
             display: flex;
@@ -86,6 +117,7 @@
             justify-content: center;
             gap: 1rem;
         }
+
         .dot-loader {
             width: 10px;
             height: 10px;
@@ -94,11 +126,26 @@
             animation: dot-loader-animation 1.4s infinite ease-in-out both;
             display: inline-block;
         }
-        .dot-loader.dot-1 { animation-delay: -0.32s; }
-        .dot-loader.dot-2 { animation-delay: -0.16s; }
+
+        .dot-loader.dot-1 {
+            animation-delay: -0.32s;
+        }
+
+        .dot-loader.dot-2 {
+            animation-delay: -0.16s;
+        }
+
         @keyframes dot-loader-animation {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1.0); }
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1.0);
+            }
         }
 
         /* Estilos para Células Copiáveis */
@@ -106,29 +153,46 @@
             cursor: pointer;
             transition: background-color 0.2s ease-in-out;
         }
+
         .copyable-cell:hover {
-            background-color: #eef2ff; /* indigo-100 */
+            background-color: #eef2ff;
+            /* indigo-100 */
         }
-        
+
         /* Animação para o ícone de importação */
         .pulsing-cloud {
             animation: pulse 2s infinite;
         }
+
         @keyframes pulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: scale(1);
                 opacity: 1;
             }
+
             50% {
                 transform: scale(1.1);
                 opacity: 0.7;
             }
         }
-
+        
+        /* Estilos para Tabela Rolável */
+        #main-view .table-container {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        #main-view thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
     </style>
 </head>
+
 <body class="bg-gray-100">
-    
+
     <div id="initial-loader" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-[100]">
         <div class="loader-container">
             <div class="flex space-x-2">
@@ -143,7 +207,8 @@
     <div id="login-view" class="hidden flex items-center justify-center min-h-screen">
         <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-xl w-full max-w-md">
             <div class="text-center">
-                <h1 id="login-title" class="text-3xl font-bold text-gray-800" style="color: #3b82f6;">Gestão de Fornecedores</h1>
+                <h1 id="login-title" class="text-3xl font-bold text-gray-800" style="color: #3b82f6;">Gestão de
+                    Fornecedores</h1>
                 <p id="login-subtitle" class="mt-2 text-gray-500">Acesse seu painel de controle</p>
             </div>
 
@@ -153,34 +218,31 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                             <ion-icon name="mail-outline" class="text-gray-400"></ion-icon>
                         </span>
-                        <input type="email" id="email-input" placeholder="Seu e-mail" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <input type="email" id="email-input" placeholder="Seu e-mail"
+                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
                     </div>
                 </div>
 
                 <div>
-                     <div class="relative">
+                    <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                           <ion-icon name="lock-closed-outline" class="text-gray-400"></ion-icon>
+                            <ion-icon name="lock-closed-outline" class="text-gray-400"></ion-icon>
                         </span>
-                        <input type="password" id="password-input" placeholder="Sua senha" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                         <button type="button" id="password-toggle" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600">
+                        <input type="password" id="password-input" placeholder="Sua senha"
+                            class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required>
+                        <button type="button" id="password-toggle"
+                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" title="Mostrar/Ocultar senha">
                             <ion-icon name="eye-outline" id="password-toggle-icon"></ion-icon>
                         </button>
                     </div>
                 </div>
-                
-                 <div id="confirm-password-div" class="hidden">
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                           <ion-icon name="lock-closed-outline" class="text-gray-400"></ion-icon>
-                        </span>
-                        <input type="password" id="confirm-password-input" placeholder="Confirme sua senha" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </div>
 
-                <div id="remember-me-div" class="flex items-center justify-between">
+                <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <input id="remember-me" name="remember-me" type="checkbox"
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                         <label for="remember-me" class="ml-2 block text-sm text-gray-900">Lembrar de mim</label>
                     </div>
                     <div class="text-sm">
@@ -189,58 +251,61 @@
                 </div>
 
                 <div>
-                    <button type="submit" id="auth-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <button type="submit" id="auth-button"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Entrar
                     </button>
                 </div>
             </form>
-             <p id="to-signup-p" class="mt-6 text-center text-sm text-gray-500">
-                Não tem uma conta? 
-                <a href="#" id="to-signup-link" class="font-medium text-blue-600 hover:text-blue-500">Crie uma agora</a>
-            </p>
-             <p id="to-login-p" class="hidden mt-6 text-center text-sm text-gray-500">
-                Já tem uma conta? 
-                <a href="#" id="to-login-link" class="font-medium text-blue-600 hover:text-blue-500">Faça o login</a>
-            </p>
         </div>
     </div>
 
     <div id="app-view" class="hidden h-screen w-screen flex">
-        <aside id="sidebar" class="bg-gray-800 text-gray-300 w-20 flex flex-col space-y-2 p-2 z-20" style="background-color: var(--sidebar-bg);">
+        <aside id="sidebar" class="bg-gray-800 text-gray-300 w-20 flex flex-col space-y-2 p-2 z-20"
+            style="background-color: var(--sidebar-bg);">
             <div class="flex items-center p-2 h-16">
                 <div id="logo-container" class="flex items-center overflow-hidden">
-                    <span id="logo-text" class="font-bold text-xl whitespace-nowrap opacity-0 transition-opacity duration-300 pl-3 text-indigo-400">SGF</span>
+                    <span id="logo-text"
+                        class="font-bold text-xl whitespace-nowrap opacity-0 transition-opacity duration-300 pl-3 text-indigo-400">SGF</span>
                 </div>
-                <button id="toggleSidebar" class="p-2 rounded-md hover:bg-gray-700 ml-auto">
+                <button id="toggleSidebar" class="p-2 rounded-md hover:bg-gray-700 ml-auto" title="Abrir/Fechar Menu">
                     <ion-icon name="menu-outline" class="text-2xl"></ion-icon>
                 </button>
             </div>
 
             <nav class="flex-1 space-y-2">
-                <a href="#" id="show-main-view" class="flex items-center p-3 rounded-lg bg-indigo-600 text-white" style="--hover-color: var(--sidebar-hover);">
+                <a href="#" id="show-main-view" class="flex items-center p-3 rounded-lg bg-indigo-600 text-white"
+                    style="--hover-color: var(--sidebar-hover);" title="Fornecedores">
                     <ion-icon name="people-outline" class="text-2xl min-w-[40px]"></ion-icon>
                     <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Fornecedores</span>
                 </a>
-                <a href="#" id="show-cep-view" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
+                <a href="#" id="show-cep-view" class="flex items-center p-3 rounded-lg hover:bg-gray-700"
+                    style="--hover-color: var(--sidebar-hover);" title="Buscar CEP (CTRL+S) / Endereço (CTRL+A)">
                     <ion-icon name="map-outline" class="text-2xl min-w-[40px]"></ion-icon>
-                    <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Buscar CEP</span>
+                    <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Buscar Endereço</span>
                 </a>
-                <a href="#" id="show-cnpj-view" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
-                    <ion-icon name="search-circle-outline" class="text-2xl min-w-[40px]"></ion-icon>
+                <a href="#" id="show-cnpj-view" class="flex items-center p-3 rounded-lg hover:bg-gray-700"
+                    style="--hover-color: var(--sidebar-hover);" title="Buscar CNPJ (CTRL+D)">
+                    <ion-icon name="business-outline" class="text-2xl min-w-[40px]"></ion-icon>
                     <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Buscar CNPJ</span>
                 </a>
-                 <a href="#" id="show-settings-view" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
+                <a href="#" id="show-settings-view" class="flex items-center p-3 rounded-lg hover:bg-gray-700"
+                    style="--hover-color: var(--sidebar-hover);" title="Configurações">
                     <ion-icon name="settings-outline" class="text-2xl min-w-[40px]"></ion-icon>
                     <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Configurações</span>
                 </a>
-                <a href="#" id="background-import-status" title="Importação em andamento..." class="hidden items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
-                    <ion-icon name="cloud-upload-outline" class="text-2xl min-w-[40px] text-indigo-400 pulsing-cloud"></ion-icon>
+                <a href="#" id="background-import-status" title="Importação em andamento..."
+                    class="hidden items-center p-3 rounded-lg hover:bg-gray-700"
+                    style="--hover-color: var(--sidebar-hover);">
+                    <ion-icon name="cloud-upload-outline"
+                        class="text-2xl min-w-[40px] text-indigo-400 pulsing-cloud"></ion-icon>
                     <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Importando...</span>
                 </a>
             </nav>
 
             <div class="p-2 border-t border-gray-700">
-                <a href="#" id="logout-button" class="flex items-center p-3 rounded-lg hover:bg-gray-700" style="--hover-color: var(--sidebar-hover);">
+                <a href="#" id="logout-button" class="flex items-center p-3 rounded-lg hover:bg-gray-700"
+                    style="--hover-color: var(--sidebar-hover);" title="Sair do Sistema">
                     <ion-icon name="log-out-outline" class="text-2xl min-w-[40px]"></ion-icon>
                     <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Sair</span>
                 </a>
@@ -250,85 +315,90 @@
         <div class="flex-1 flex flex-col">
             <header class="bg-white shadow-sm p-4 h-16 flex items-center justify-between z-10">
                 <h1 id="header-title" class="text-2xl font-bold text-gray-800">Gerenciamento de Fornecedores</h1>
-                <div id="header-search-container" class="w-full max-w-xs">
-                    <button id="new-cnpj-search-btn" class="hidden w-full bg-indigo-600 text-white px-4 py-2 text-sm rounded-md hover:bg-indigo-700 flex items-center justify-center space-x-2">
-                        <ion-icon name="search-outline"></ion-icon>
-                        <span>Nova Busca (CTRL+D)</span>
-                    </button>
-                    <form id="header-cnpj-form" class="hidden relative">
-                        <label for="headerCnpjInput" class="sr-only">Pesquisar novo CNPJ</label>
-                        <input type="text" id="headerCnpjInput" placeholder="Pesquisar novo CNPJ... (CTRL+D)" class="w-full bg-gray-100 pl-4 pr-10 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button type="submit" class="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-indigo-600">
-                           <ion-icon name="search-outline" class="text-lg"></ion-icon>
+                <div class="flex items-center space-x-4">
+                     <div id="header-search-container" class="w-full max-w-xs hidden">
+                        <button id="new-cnpj-search-btn"
+                            class="w-full bg-indigo-600 text-white px-4 py-2 text-sm rounded-md hover:bg-indigo-700 flex items-center justify-center space-x-2" title="Realizar uma nova busca de CNPJ (CTRL+D)">
+                            <ion-icon name="search-outline"></ion-icon>
+                            <span>Nova Busca (CTRL+D)</span>
                         </button>
-                    </form>
+                    </div>
+                     <div id="header-bulk-delete-container" class="hidden">
+                         <button id="bulk-delete-btn-header" class="bg-red-500 text-white px-4 py-2 text-sm rounded-md hover:bg-red-600 flex items-center space-x-2" title="Excluir fornecedores selecionados">
+                             <ion-icon name="trash-outline"></ion-icon>
+                             <span>Excluir</span>
+                         </button>
+                     </div>
                 </div>
             </header>
 
             <main id="main-view" class="flex-1 p-6 overflow-y-auto">
-                <div class="bg-white p-6 rounded-xl shadow-md">
+                <div class="bg-white p-6 rounded-xl shadow-md h-full flex flex-col">
                     <div class="flex justify-between items-center mb-4">
                         <div class="flex items-center space-x-4">
                             <h2 class="text-xl font-semibold text-gray-700">Lista de Fornecedores</h2>
-                            <div id="bulk-actions-container" class="hidden">
-                                <button id="bulk-delete-btn" class="bg-red-500 text-white px-4 py-2 text-sm rounded-md hover:bg-red-600 flex items-center space-x-2">
-                                    <ion-icon name="trash-outline"></ion-icon>
-                                    <span>Excluir Selecionados</span>
-                                </button>
-                            </div>
-                             <button id="export-json-btn" class="bg-green-500 text-white px-4 py-2 text-sm rounded-md hover:bg-green-600 flex items-center space-x-2">
+                            <button id="open-export-modal-btn"
+                                class="bg-blue-500 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-600 flex items-center space-x-2" title="Exportar dados">
                                 <ion-icon name="download-outline"></ion-icon>
-                                <span>Exportar JSON</span>
+                                <span>Exportar</span>
                             </button>
                         </div>
                         <div class="relative">
-                            <input type="text" id="supplier-search-input" placeholder="Buscar por Cód, CNPJ, Nome, etc... (CTRL+F)" class="w-96 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <ion-icon name="search-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
+                            <input type="text" id="supplier-search-input"
+                                placeholder="Buscar por Cód, CNPJ, Nome, etc... (CTRL+F)"
+                                class="w-[36rem] pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <ion-icon name="search-outline"
+                                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto">
+                    <div class="table-container">
                         <table class="min-w-full bg-white">
                             <thead class="bg-gray-100" style="background-color: var(--table-header);">
                                 <tr>
-                                    <th class="py-3 px-4 w-12"><input type="checkbox" id="select-all-checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"></th>
-                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 cursor-pointer whitespace-nowrap" data-sort-key="code">
-                                        <div class="flex items-center">Cód.<ion-icon name="caret-down-outline" class="ml-1 opacity-50"></ion-icon></div>
+                                    <th class="py-1 px-4 w-12"><input type="checkbox" id="select-all-checkbox"
+                                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" title="Selecionar Todos">
                                     </th>
-                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">CNPJ</th>
-                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 cursor-pointer" data-sort-key="name">
-                                        <div class="flex items-center">Nome do Fornecedor<ion-icon name="caret-down-outline" class="ml-1 opacity-50"></ion-icon></div>
+                                    <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600 cursor-pointer whitespace-nowrap"
+                                        data-sort-key="code">
+                                        <div class="flex items-center">Cód.<ion-icon name="caret-down-outline"
+                                                class="ml-1 opacity-50"></ion-icon></div>
                                     </th>
-                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Cód. Cliente</th>
-                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Observações</th>
-                                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Ações</th>
+                                    <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600">CNPJ</th>
+                                    <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600 cursor-pointer"
+                                        data-sort-key="name">
+                                        <div class="flex items-center">Nome do Fornecedor<ion-icon
+                                                name="caret-down-outline" class="ml-1 opacity-50"></ion-icon></div>
+                                    </th>
+                                    <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600">Cód. Cliente
+                                    </th>
+                                    <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600">Observações</th>
+                                    <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600">Ações</th>
+                                    <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600">Info</th>
                                 </tr>
                             </thead>
                             <tbody id="supplier-table-body" class="text-gray-700">
-                                <tr id="no-suppliers-row">
-                                    <td colspan="7" class="text-center py-10 text-gray-500">
-                                        <ion-icon name="file-tray-outline" class="text-4xl mx-auto"></ion-icon>
-                                        <p class="mt-2">Nenhum fornecedor cadastrado ainda.</p>
-                                    </td>
-                                </tr>
+                                <!-- O conteúdo será preenchido pelo JavaScript, começando com um loader -->
                             </tbody>
                         </table>
                     </div>
-                    <div id="pagination-controls" class="flex flex-wrap justify-center items-center gap-4 mt-4"></div>
+                    <div id="pagination-controls" class="flex flex-wrap justify-center items-center gap-4 mt-auto pt-4 border-t"></div>
                 </div>
             </main>
 
             <div id="cep-search-view" class="flex-1 p-6 overflow-y-auto hidden">
                 <div id="cep-search-container" class="bg-white p-8 rounded-xl shadow-sm mb-6">
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">Buscar Endereço</h2>
-                    <p class="text-gray-500">Busque por CEP ou pelo endereço. (CTRL+S)</p>
-                    
+                    <p class="text-gray-500">Busque por CEP (CTRL+S) ou pelo endereço (CTRL+A).</p>
+
                     <div class="border-b border-gray-200 mt-4">
                         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                            <button id="tab-by-cep" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600">
+                            <button id="tab-by-cep"
+                                class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600">
                                 Por CEP
                             </button>
-                            <button id="tab-by-address" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            <button id="tab-by-address"
+                                class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
                                 Por Endereço
                             </button>
                         </nav>
@@ -337,8 +407,11 @@
                     <form id="cep-form" class="mt-6">
                         <label for="cepInput" class="block text-sm font-medium text-gray-700">Digite o CEP</label>
                         <div class="flex items-center space-x-2 mt-1">
-                            <input type="text" id="cepInput" placeholder="00000-000" maxlength="9" class="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
-                            <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 flex items-center space-x-2">
+                            <input type="text" id="cepInput" placeholder="00000-000" maxlength="9"
+                                class="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                required>
+                            <button type="submit"
+                                class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 flex items-center space-x-2">
                                 <ion-icon name="search-outline"></ion-icon>
                                 <span>Buscar</span>
                             </button>
@@ -349,18 +422,26 @@
                         <div class="grid grid-cols-1 md:grid-cols-[1fr_2fr_3fr_auto] gap-4 items-end">
                             <div>
                                 <label for="ufInput" class="block text-sm font-medium text-gray-700">UF</label>
-                                <input type="text" id="ufInput" placeholder="SP" maxlength="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                                <input type="text" id="ufInput" placeholder="SP" maxlength="2"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    required>
                             </div>
                             <div>
                                 <label for="cityInput" class="block text-sm font-medium text-gray-700">Cidade</label>
-                                <input type="text" id="cityInput" placeholder="São Paulo" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                                <input type="text" id="cityInput" placeholder="São Paulo"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    required>
                             </div>
                             <div>
-                                <label for="streetInput" class="block text-sm font-medium text-gray-700">Logradouro</label>
-                                <input type="text" id="streetInput" placeholder="Av. Paulista" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                                <label for="streetInput"
+                                    class="block text-sm font-medium text-gray-700">Logradouro</label>
+                                <input type="text" id="streetInput" placeholder="Av. Paulista"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    required>
                             </div>
                             <div>
-                                <button type="submit" class="bg-indigo-600 text-white px-5 py-2 h-10 rounded-md hover:bg-indigo-700 flex items-center justify-center space-x-2 w-full">
+                                <button type="submit"
+                                    class="bg-indigo-600 text-white px-5 py-2 h-10 rounded-md hover:bg-indigo-700 flex items-center justify-center space-x-2 w-full">
                                     <ion-icon name="search-outline"></ion-icon>
                                     <span>Buscar</span>
                                 </button>
@@ -377,12 +458,28 @@
             </div>
 
             <div id="cnpj-search-view" class="flex-1 p-6 overflow-y-auto hidden">
-                <div id="cnpj-result">
-                    <div class="flex items-center justify-center text-gray-500">
-                        <p>Digite um CNPJ na barra de busca superior para começar.</p>
-                    </div>
+                <div id="cnpj-search-container" class="bg-white p-8 rounded-xl shadow-sm mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Consultar CNPJ</h2>
+                    <p class="text-gray-500">Busque por um CNPJ para ver os detalhes da empresa. (CTRL+D)</p>
+                    <form id="cnpj-search-form" class="mt-6">
+                        <label for="view-cnpj-input" class="block text-sm font-medium text-gray-700">Digite o CNPJ</label>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <input type="text" id="view-cnpj-input" placeholder="00.000.000/0000-00"
+                                class="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                required maxlength="18">
+                            <button type="submit"
+                                class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 flex items-center space-x-2">
+                                <ion-icon name="search-outline"></ion-icon>
+                                <span>Buscar</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div id="cnpj-result" class="h-full">
+                    <!-- O conteúdo da busca será inserido aqui -->
                 </div>
             </div>
+
 
             <div id="settings-view" class="flex-1 p-6 overflow-y-auto hidden">
                 <div class="bg-white p-8 rounded-xl shadow-sm max-w-2xl mx-auto">
@@ -393,23 +490,62 @@
                             <p id="user-email" class="text-lg text-gray-800"></p>
                         </div>
                         <div>
-                             <button id="reset-password-btn" class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 flex items-center space-x-2">
+                            <button id="reset-password-btn"
+                                class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 flex items-center space-x-2">
                                 <ion-icon name="key-outline"></ion-icon>
                                 <span>Redefinir Senha</span>
                             </button>
-                            <p class="text-xs text-gray-500 mt-2">Um e-mail será enviado para você com as instruções para criar uma nova senha.</p>
+                            <p class="text-xs text-gray-500 mt-2">Um e-mail será enviado para você com as instruções
+                                para criar uma nova senha.</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-6 border-t mt-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Preferências da Tabela</h3>
+                        <div class="mb-6">
+                            <p class="text-sm font-medium text-gray-600">Comportamento do "Selecionar Tudo"</p>
+                            <p class="text-xs text-gray-500 mb-2">Escolha o que acontece ao marcar a caixa de seleção principal na tabela de fornecedores.</p>
+                            <fieldset class="mt-2">
+                                <legend class="sr-only">Opções de seleção</legend>
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <input id="select-mode-page" name="select-mode" type="radio" value="page" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                        <label for="select-mode-page" class="ml-3 block text-sm text-gray-700">
+                                            Selecionar apenas os itens da página atual
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="select-mode-all" name="select-mode" type="radio" value="all" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                        <label for="select-mode-all" class="ml-3 block text-sm text-gray-700">
+                                            Selecionar todos os itens (em todas as páginas)
+                                        </label>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                         <div class="flex items-center justify-between">
+                            <label for="rows-per-page-select" class="text-sm font-medium text-gray-600">Linhas por página</label>
+                            <select id="rows-per-page-select" class="mt-1 block w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <button id="add-supplier-btn" class="fixed bottom-8 right-8 bg-indigo-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-110 z-30" style="background-color: var(--primary-color);">
+
+    <button id="add-supplier-btn"
+        class="fixed bottom-8 right-8 bg-indigo-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-110 z-30"
+        style="background-color: var(--primary-color);" title="Adicionar Fornecedor (CTRL+G)">
         <ion-icon name="add-outline" class="text-3xl"></ion-icon>
     </button>
 
-    <div id="supplierModal" aria-hidden="true" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="supplierModal" aria-hidden="true"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl max-h-screen overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
                 <h2 id="modal-title" class="text-2xl font-bold text-gray-800">Cadastrar Novo Fornecedor</h2>
@@ -417,23 +553,33 @@
                     <ion-icon name="close-outline" class="text-3xl"></ion-icon>
                 </button>
             </div>
-            
-             <div id="modal-content">
+
+            <div id="modal-content">
                 <form id="supplier-form" class="space-y-4">
                     <input type="hidden" id="editSupplierId" name="editSupplierId">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label for="supplierCode" class="block text-sm font-medium text-gray-700">Cód. Fornecedor <span class="text-red-500">*</span></label>
-                            <input type="text" id="supplierCode" name="supplierCode" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                            <label for="supplierCode" class="block text-sm font-medium text-gray-700">Cód. Fornecedor
+                                <span class="text-red-500">*</span></label>
+                            <input type="text" id="supplierCode" name="supplierCode"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                required>
                         </div>
                         <div>
-                            <label for="supplierCnpj" class="block text-sm font-medium text-gray-700">CNPJ <span class="text-red-500">*</span></label>
+                            <label for="supplierCnpj" class="block text-sm font-medium text-gray-700">CNPJ <span
+                                    class="text-red-500">*</span></label>
                             <div class="relative">
-                                <input type="text" id="supplierCnpj" name="supplierCnpj" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" maxlength="18" required>
+                                <input type="text" id="supplierCnpj" name="supplierCnpj"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    maxlength="18" required>
                                 <div id="cnpj-loader" class="absolute right-3 top-1/2 -translate-y-1/2 hidden">
-                                    <svg class="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    <svg class="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg"
+                                        fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
                                     </svg>
                                 </div>
                             </div>
@@ -441,32 +587,41 @@
                     </div>
 
                     <div>
-                        <label for="supplierName" class="block text-sm font-medium text-gray-700">Nome do Fornecedor <span class="text-red-500">*</span></label>
-                        <input type="text" id="supplierName" name="supplierName" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-gray-100" required readonly>
+                        <label for="supplierName" class="block text-sm font-medium text-gray-700">Nome do Fornecedor
+                            <span class="text-red-500">*</span></label>
+                        <input type="text" id="supplierName" name="supplierName"
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-gray-100"
+                            required readonly>
                     </div>
 
                     <div>
                         <label for="clientCode" class="block text-sm font-medium text-gray-700">Cód. Cliente</label>
-                        <input type="text" id="clientCode" name="clientCode" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <input type="text" id="clientCode" name="clientCode"
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
 
                     <div>
                         <label for="observations" class="block text-sm font-medium text-gray-700">Observações</label>
-                        <textarea id="observations" name="observations" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                        <textarea id="observations" name="observations" rows="3"
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
                     </div>
 
                     <div class="flex justify-end pt-4 space-x-3 border-t">
-                        <label for="json-file-input" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition cursor-pointer flex items-center gap-2">
-                           <ion-icon name="cloud-upload-outline"></ion-icon> Importar JSON
+                        <label for="json-file-input"
+                            class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition cursor-pointer flex items-center gap-2" title="Importar fornecedores de um arquivo JSON">
+                            <ion-icon name="cloud-upload-outline"></ion-icon> Importar JSON
                         </label>
                         <input type="file" id="json-file-input" class="hidden" accept=".json">
 
-                        <button type="button" id="cancelBtn" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
-                        <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition" style="background-color: var(--primary-color);">Salvar Fornecedor</button>
+                        <button type="button" id="cancelBtn"
+                            class="bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
+                        <button type="submit"
+                            class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition"
+                            style="background-color: var(--primary-color);">Salvar Fornecedor</button>
                     </div>
                 </form>
             </div>
-             <div id="import-loader" class="hidden">
+            <div id="import-loader" class="hidden">
                 <div class="loader-container">
                     <div class="flex space-x-2">
                         <div class="dot-loader dot-1"></div>
@@ -476,57 +631,118 @@
                     <p class="text-gray-600 mt-4">Importando fornecedores...</p>
                     <p id="import-progress" class="text-sm text-indigo-600 font-medium"></p>
                     <div class="mt-4 flex space-x-2">
-                        <button id="cancel-import-btn" class="bg-red-500 text-white px-4 py-2 text-sm rounded-md hover:bg-red-600">Cancelar</button>
-                        <button id="run-in-background-btn" class="bg-gray-500 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-600">Rodar em 2º Plano</button>
+                        <button id="cancel-import-btn"
+                            class="bg-red-500 text-white px-4 py-2 text-sm rounded-md hover:bg-red-600">Cancelar</button>
+                        <button id="run-in-background-btn"
+                            class="bg-gray-500 text-white px-4 py-2 text-sm rounded-md hover:bg-gray-600">Rodar em 2º
+                            Plano</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div id="toast" class="fixed top-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 transform translate-y-[-20px] z-[60]">
-      <p id="toast-message">Mensagem de erro!</p>
+
+    <div id="toast"
+        class="fixed top-5 right-5 bg-red-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 transform translate-y-[-20px] z-[60]">
+        <p id="toast-message">Mensagem de erro!</p>
     </div>
 
-    <div id="confirmDeleteModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="confirmDeleteModal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm">
             <h3 class="text-lg font-bold text-gray-800">Confirmar Exclusão</h3>
-            <p id="confirmMessage" class="mt-2 text-sm text-gray-600">Você tem certeza que deseja excluir os itens selecionados?</p>
+            <p id="confirmMessage" class="mt-2 text-sm text-gray-600">Você tem certeza que deseja excluir os itens
+                selecionados?</p>
             <div class="mt-6 flex justify-end space-x-3">
-                <button id="cancelDeleteBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
-                <button id="confirmDeleteBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">Excluir</button>
+                <button id="cancelDeleteBtn"
+                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
+                <button id="confirmDeleteBtn"
+                    class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">Excluir</button>
             </div>
         </div>
     </div>
 
-    <div id="confirmDuplicateModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="confirmDuplicateModal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm">
             <h3 class="text-lg font-bold text-yellow-600">Fornecedor Duplicado</h3>
-            <p id="duplicateMessage" class="mt-2 text-sm text-gray-600">Já existe um fornecedor com este Código ou CNPJ. Deseja cadastrar mesmo assim?</p>
+            <p id="duplicateMessage" class="mt-2 text-sm text-gray-600">Já existe um fornecedor com este Código ou CNPJ.
+                Deseja cadastrar mesmo assim?</p>
             <div class="mt-6 flex justify-end space-x-3">
-                <button id="cancelDuplicateBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Não</button>
-                <button id="confirmDuplicateBtn" class="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition">Sim, Cadastrar</button>
+                <button id="cancelDuplicateBtn"
+                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Não</button>
+                <button id="confirmDuplicateBtn"
+                    class="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition">Sim,
+                    Cadastrar</button>
             </div>
         </div>
     </div>
+    
+    <div id="exportModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm">
+            <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Opções de Exportação</h3>
+            <form id="export-form" class="mt-4 space-y-6">
+                <div>
+                    <p class="text-sm font-medium text-gray-700">Exportar</p>
+                    <fieldset class="mt-2">
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <input id="export-scope-all" name="export-scope" type="radio" value="all" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" checked>
+                                <label for="export-scope-all" class="ml-3 block text-sm text-gray-700">Tudo</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="export-scope-selected" name="export-scope" type="radio" value="selected" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                <label for="export-scope-selected" class="ml-3 block text-sm text-gray-700">Itens Selecionados</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+                 <div>
+                    <p class="text-sm font-medium text-gray-700">Tipo de arquivo</p>
+                    <fieldset class="mt-2">
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <input id="export-type-json" name="export-type" type="radio" value="json" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" checked>
+                                <label for="export-type-json" class="ml-3 block text-sm text-gray-700">JSON</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="export-type-excel" name="export-type" type="radio" value="excel" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                <label for="export-type-excel" class="ml-3 block text-sm text-gray-700">Excel (XLSX)</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="cancelExportBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">Exportar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <div id="importPreviewModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="importPreviewModal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md">
             <h3 class="text-lg font-bold text-gray-800">Análise de Importação</h3>
             <div class="mt-4 space-y-2 text-sm">
                 <p>Fornecedores encontrados no arquivo: <span id="preview-total" class="font-bold"></span></p>
-                <p>Fornecedores duplicados (serão ignorados): <span id="preview-duplicates" class="font-bold text-red-600"></span></p>
-                <p>Fornecedores válidos para importar: <span id="preview-valid" class="font-bold text-green-600"></span></p>
+                <p>Fornecedores duplicados (serão ignorados): <span id="preview-duplicates"
+                        class="font-bold text-red-600"></span></p>
+                <p>Fornecedores válidos para importar: <span id="preview-valid" class="font-bold text-green-600"></span>
+                </p>
             </div>
-             <div class="mt-6 flex justify-end space-x-3">
-                <button id="cancelImportPreviewBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
-                <button id="confirmImportBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">Importar</button>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="cancelImportPreviewBtn"
+                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
+                <button id="confirmImportBtn"
+                    class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">Importar</button>
             </div>
         </div>
     </div>
 
 
-    <div id="importReportModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="importReportModal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-gray-800">Relatório de Importação</h3>
@@ -535,29 +751,48 @@
                 </button>
             </div>
             <div id="importReportContent" class="mt-2 text-sm text-gray-600 max-h-80 overflow-y-auto">
-                </div>
+            </div>
             <div class="mt-6 flex justify-end">
-                <button id="okImportReportBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">OK</button>
+                <button id="okImportReportBtn"
+                    class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">OK</button>
             </div>
         </div>
     </div>
 
+    <!-- NOVO: Modal de Informações do Fornecedor -->
+    <div id="infoModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 class="text-xl font-bold text-gray-800">Detalhes do Fornecedor</h3>
+                <button id="closeInfoModalBtn" class="text-gray-500 hover:text-gray-800">
+                    <ion-icon name="close-outline" class="text-3xl"></ion-icon>
+                </button>
+            </div>
+            <div id="infoModalContent" class="mt-4 space-y-3 text-sm">
+                <!-- Conteúdo injetado via JS -->
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button id="okInfoModalBtn"
+                    class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition">OK</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         // UPDATED: Using a newer version of Firebase SDK (v10.12.2)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, serverTimestamp, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, query, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyCg-Jd-XxVh1g28_po_pomMillWdrZggfU",
-            authDomain: "fornecedores-a21f7.firebaseapp.com",
-            projectId: "fornecedores-a21f7",
-            storageBucket: "fornecedores-a21f7.firebasestorage.app",
-            messagingSenderId: "965790736406",
-            appId: "1:965790736406:web:a2b06c9fe2e9b9508c1537"
+            apiKey: "AIzaSyB5tdaJvlB1UkFemO6X_D19rbzZgiR3b0Q",
+            authDomain: "cgf-web.firebaseapp.com",
+            projectId: "cgf-web",
+            storageBucket: "cgf-web.firebasestorage.app",
+            messagingSenderId: "546201159693",
+            appId: "1:546201159693:web:973e7c33aa165543b76d44"
         };
 
         // Initialize Firebase
@@ -587,7 +822,7 @@
                     toast.classList.add('opacity-0', 'translate-y-[-20px]');
                 }, 4000);
             };
-            window.showToast = showToast; 
+            window.showToast = showToast;
 
             // --- Lógica de Autenticação ---
             const initialLoader = document.getElementById('initial-loader');
@@ -600,16 +835,6 @@
             const passwordToggleIcon = document.getElementById('password-toggle-icon');
             const authButton = document.getElementById('auth-button');
             const logoutButton = document.getElementById('logout-button');
-            const loginTitle = document.getElementById('login-title');
-            const loginSubtitle = document.getElementById('login-subtitle');
-            const confirmPasswordDiv = document.getElementById('confirm-password-div');
-            const confirmPasswordInput = document.getElementById('confirm-password-input');
-            const toSignupP = document.getElementById('to-signup-p');
-            const toSignupLink = document.getElementById('to-signup-link');
-            const toLoginP = document.getElementById('to-login-p');
-            const toLoginLink = document.getElementById('to-login-link');
-            const rememberMeDiv = document.getElementById('remember-me-div');
-            let isLoginMode = true;
             let unsubscribeSuppliers = null;
 
             onAuthStateChanged(auth, user => {
@@ -623,7 +848,7 @@
                     appView.classList.add('hidden');
                     loginView.classList.remove('hidden');
                     loginView.classList.add('flex');
-                     if (unsubscribeSuppliers) {
+                    if (unsubscribeSuppliers) {
                         unsubscribeSuppliers();
                     }
                     suppliers = [];
@@ -631,81 +856,24 @@
                 }
             });
 
-            toSignupLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                isLoginMode = false;
-                loginTitle.textContent = 'Crie sua Conta';
-                loginSubtitle.textContent = 'Insira seus dados para começar';
-                authButton.textContent = 'Registrar';
-                confirmPasswordDiv.classList.remove('hidden');
-                confirmPasswordInput.required = true;
-                toSignupP.classList.add('hidden');
-                toLoginP.classList.remove('hidden');
-                rememberMeDiv.classList.add('hidden');
-            });
-
-            toLoginLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                isLoginMode = true;
-                loginTitle.textContent = 'Gestão de Fornecedores';
-                loginSubtitle.textContent = 'Acesse seu painel de controle';
-                authButton.textContent = 'Entrar';
-                confirmPasswordDiv.classList.add('hidden');
-                confirmPasswordInput.required = false;
-                toSignupP.classList.remove('hidden');
-                toLoginP.classList.add('hidden');
-                rememberMeDiv.classList.remove('hidden');
-            });
-
             authForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = emailInput.value;
                 const password = passwordInput.value;
                 authButton.disabled = true;
-                authButton.textContent = isLoginMode ? 'Entrando...' : 'Registrando...';
+                authButton.textContent = 'Entrando...';
 
-                if (isLoginMode) {
-                    try {
-                        await signInWithEmailAndPassword(auth, email, password);
-                    } catch (error) {
-                        let msg = 'Ocorreu um erro ao tentar fazer login.';
-                        if (error.code === 'auth/invalid-credential') {
-                            msg = 'E-mail ou senha inválidos.';
-                        }
-                        showToast(msg, 'error');
-                    } finally {
-                        authButton.disabled = false;
-                        authButton.textContent = 'Entrar';
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    let msg = 'Ocorreu um erro ao tentar fazer login.';
+                    if (error.code === 'auth/invalid-credential') {
+                        msg = 'E-mail ou senha inválidos.';
                     }
-                } else { // Modo de Registro
-                    const confirmPassword = confirmPasswordInput.value;
-                    if (password.length < 6) {
-                        showToast('A senha deve ter pelo menos 6 caracteres.', 'error');
-                        authButton.disabled = false;
-                        authButton.textContent = 'Registrar';
-                        return;
-                    }
-                    if (password !== confirmPassword) {
-                        showToast('As senhas não coincidem.', 'error');
-                        authButton.disabled = false;
-                        authButton.textContent = 'Registrar';
-                        return;
-                    }
-                    try {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                        showToast('Conta criada com sucesso! Você será logado.', 'success');
-                    } catch (error) {
-                        let msg = 'Ocorreu um erro ao criar a conta.';
-                        if (error.code === 'auth/email-already-in-use') {
-                            msg = 'Este e-mail já está em uso.';
-                        } else if (error.code === 'auth/invalid-email') {
-                            msg = 'O e-mail fornecido não é válido.';
-                        }
-                        showToast(msg, 'error');
-                    } finally {
-                        authButton.disabled = false;
-                        authButton.textContent = 'Registrar';
-                    }
+                    showToast(msg, 'error');
+                } finally {
+                    authButton.disabled = false;
+                    authButton.textContent = 'Entrar';
                 }
             });
 
@@ -723,13 +891,13 @@
                 passwordInput.type = isPassword ? 'text' : 'password';
                 passwordToggleIcon.name = isPassword ? 'eye-off-outline' : 'eye-outline';
             });
-            
+
             // --- O restante do código da aplicação ---
             const sidebar = document.getElementById('sidebar');
             const toggleSidebarBtn = document.getElementById('toggleSidebar');
             const logoText = document.getElementById('logo-text');
             const sidebarItemsText = document.querySelectorAll('.sidebar-item-text');
-            
+
             const addSupplierBtn = document.getElementById('add-supplier-btn');
             const supplierModal = document.getElementById('supplierModal');
             const closeModalBtn = document.getElementById('closeModalBtn');
@@ -737,7 +905,7 @@
             const supplierForm = document.getElementById('supplier-form');
             const supplierTableBody = document.getElementById('supplier-table-body');
             const tableHead = document.querySelector('#main-view thead');
-            
+
             const modalTitle = document.getElementById('modal-title');
             const editSupplierIdInput = document.getElementById('editSupplierId');
 
@@ -745,8 +913,9 @@
             const nameInput = document.getElementById('supplierName');
             const cnpjLoader = document.getElementById('cnpj-loader');
 
-            const bulkActionsContainer = document.getElementById('bulk-actions-container');
-            const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+            const bulkDeleteBtnHeader = document.getElementById('bulk-delete-btn-header');
+            const headerBulkDeleteContainer = document.getElementById('header-bulk-delete-container');
+
             const selectAllCheckbox = document.getElementById('select-all-checkbox');
             const paginationControls = document.getElementById('pagination-controls');
             const supplierSearchInput = document.getElementById('supplier-search-input');
@@ -757,7 +926,7 @@
             const cnpjSearchView = document.getElementById('cnpj-search-view');
             const settingsView = document.getElementById('settings-view');
             const headerTitle = document.getElementById('header-title');
-            
+
             // Botões de navegação da View
             const showMainViewBtn = document.getElementById('show-main-view');
             const showCepViewBtn = document.getElementById('show-cep-view');
@@ -776,11 +945,14 @@
             const tabByAddress = document.getElementById('tab-by-address');
 
             // Busca CNPJ
-            const headerCnpjForm = document.getElementById('header-cnpj-form');
-            const headerCnpjInput = document.getElementById('headerCnpjInput');
+            const cnpjSearchContainer = document.getElementById('cnpj-search-container');
+            const headerSearchContainer = document.getElementById('header-search-container');
             const newCnpjSearchBtn = document.getElementById('new-cnpj-search-btn');
             const cnpjResultDiv = document.getElementById('cnpj-result');
-            
+            const cnpjSearchForm = document.getElementById('cnpj-search-form');
+            const viewCnpjInput = document.getElementById('view-cnpj-input');
+
+
             // Modal de Confirmação Exclusão
             const confirmDeleteModal = document.getElementById('confirmDeleteModal');
             const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
@@ -788,6 +960,12 @@
             const confirmMessage = document.getElementById('confirmMessage');
             let deleteConfirmCallback = null;
             
+             // Export Modal
+            const exportModal = document.getElementById('exportModal');
+            const openExportModalBtn = document.getElementById('open-export-modal-btn');
+            const cancelExportBtn = document.getElementById('cancelExportBtn');
+            const exportForm = document.getElementById('export-form');
+
             // Modal de Confirmação Duplicidade
             const confirmDuplicateModal = document.getElementById('confirmDuplicateModal');
             const cancelDuplicateBtn = document.getElementById('cancelDuplicateBtn');
@@ -806,27 +984,37 @@
             const confirmImportBtn = document.getElementById('confirmImportBtn');
             let importDataCache = null;
 
+            // NOVO: Modal de Informações
+            const infoModal = document.getElementById('infoModal');
+            const closeInfoModalBtn = document.getElementById('closeInfoModalBtn');
+            const okInfoModalBtn = document.getElementById('okInfoModalBtn');
+            const infoModalContent = document.getElementById('infoModalContent');
+
             // Configurações
             const userEmailEl = document.getElementById('user-email');
             const resetPasswordBtn = document.getElementById('reset-password-btn');
+            const selectModePageRadio = document.getElementById('select-mode-page');
+            const selectModeAllRadio = document.getElementById('select-mode-all');
+            const rowsPerPageSelect = document.getElementById('rows-per-page-select');
+
 
             let suppliers = [];
             let currentPage = 1;
-            const ROWS_PER_PAGE = 50;
+            let ROWS_PER_PAGE = 50;
             const selectedSuppliers = new Set();
             let cnpjSearchPerformed = false;
-            let searchFilter = ''; 
+            let searchFilter = '';
             let searchDebounceTimer;
             let isImportCancelled = false;
             let isImportingInBackground = false;
-            let sortConfig = { key: 'timestamp', direction: 'desc' };
-            
+            let sortConfig = { key: 'dateTime', direction: 'desc' };
+            let selectAllMode = 'page'; 
+
             // --- Lógica do Firestore ---
             function setupRealtimeListener() {
-                if (unsubscribeSuppliers) unsubscribeSuppliers(); 
-                
+                if (unsubscribeSuppliers) unsubscribeSuppliers();
+
                 const suppliersCollectionRef = collection(db, 'suppliers_public');
-                // A ordenação inicial será feita no cliente agora
                 const q = query(suppliersCollectionRef);
 
                 unsubscribeSuppliers = onSnapshot(q, (snapshot) => {
@@ -840,10 +1028,9 @@
                     showToast("Não foi possível carregar os fornecedores. Verifique as regras de segurança do Firestore.", "error");
                 });
             }
-            
+
             // --- Lógica de Importação de JSON ---
             const jsonFileInput = document.getElementById('json-file-input');
-            const exportJsonBtn = document.getElementById('export-json-btn');
             const importLoader = document.getElementById('import-loader');
             const modalContent = document.getElementById('modal-content');
             const importProgress = document.getElementById('import-progress');
@@ -853,16 +1040,16 @@
 
             closeImportReportBtn.addEventListener('click', () => importReportModal.classList.add('hidden'));
             okImportReportBtn.addEventListener('click', () => importReportModal.classList.add('hidden'));
-            
+
             cancelImportBtn.addEventListener('click', () => {
                 isImportCancelled = true;
-                if(isImportingInBackground){
+                if (isImportingInBackground) {
                     backgroundImportStatus.classList.add('hidden');
                     isImportingInBackground = false;
                 }
                 showToast('Importação cancelada pelo usuário.', 'info');
             });
-            
+
             runInBackgroundBtn.addEventListener('click', () => {
                 isImportingInBackground = true;
                 backgroundImportStatus.classList.remove('hidden');
@@ -871,7 +1058,7 @@
             });
 
             backgroundImportStatus.addEventListener('click', () => {
-                if(isImportingInBackground){
+                if (isImportingInBackground) {
                     supplierModal.classList.remove('hidden');
                     modalTitle.textContent = "Progresso da Importação";
                     modalContent.classList.add('hidden');
@@ -898,7 +1085,7 @@
                 importReportContent.innerHTML = reportHTML;
                 importReportModal.classList.remove('hidden');
             }
-            
+
             const startImportProcess = (dataToImport) => {
                 isImportCancelled = false;
                 modalTitle.textContent = "Progresso da Importação";
@@ -907,7 +1094,7 @@
 
                 let importedCount = 0;
                 const totalToImport = dataToImport.length;
-                
+
                 const processChunk = async () => {
                     if (isImportCancelled) {
                         closeModal();
@@ -917,14 +1104,14 @@
                         }
                         return;
                     }
-                    
-                    const batchData = dataToImport.splice(0, 400); // Processa em lotes maiores
+
+                    const batchData = dataToImport.splice(0, 400);
                     if (batchData.length === 0) {
                         showToast(`${importedCount} fornecedor(es) importado(s) com sucesso!`, 'success');
                         closeModal();
                         if (isImportingInBackground) {
-                           backgroundImportStatus.classList.add('hidden');
-                           isImportingInBackground = false;
+                            backgroundImportStatus.classList.add('hidden');
+                            isImportingInBackground = false;
                         }
                         return;
                     }
@@ -938,8 +1125,8 @@
                     await firestoreBatch.commit();
                     importedCount += batchData.length;
                     importProgress.textContent = `Processando ${importedCount} de ${totalToImport}...`;
-                    
-                    setTimeout(processChunk, 50); // Pequeno delay para a UI respirar
+
+                    setTimeout(processChunk, 50);
                 };
 
                 processChunk();
@@ -961,39 +1148,39 @@
             jsonFileInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (!file || !auth.currentUser) return;
-                
+
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const jsonData = JSON.parse(e.target.result);
                         if (!Array.isArray(jsonData)) {
-                           throw new Error('O arquivo JSON não contém um array.');
+                            throw new Error('O arquivo JSON não contém um array.');
                         }
-                        
-                        // Pré-análise
-                        const suppliersInDb = new Set(suppliers.map(s => s.cnpj));
-                        const codesInDb = new Set(suppliers.map(s => s.code));
+
+                        const suppliersInDbCnpj = new Set(suppliers.map(s => s.cnpj));
+                        const suppliersInDbCode = new Set(suppliers.map(s => s.code));
+                        const seenInFileCnpj = new Set();
+                        const seenInFileCode = new Set();
                         const validToImport = [];
                         const duplicates = [];
 
                         jsonData.forEach(item => {
-                            const cnpj = formatCnpj(String(item.cnpj));
-                            const code = String(item.codFornecedor);
+                            const cnpj = formatCnpj(String(item.cnpj || ''));
+                            const code = String(item.codFornecedor || '');
 
-                            if(suppliersInDb.has(cnpj) || codesInDb.has(code)){
+                            if (suppliersInDbCnpj.has(cnpj) || suppliersInDbCode.has(code) || seenInFileCnpj.has(cnpj) || seenInFileCode.has(code)) {
                                 duplicates.push(item);
                             } else {
                                 validToImport.push({
                                     code: code,
                                     cnpj: cnpj,
                                     name: item.nomeFornecedor || 'N/A',
-                                    clientCode: String(item.codCliente) || '',
-                                    observations: item.centroCusto || '',
-                                    timestamp: serverTimestamp()
+                                    clientCode: String(item.codCliente || ''),
+                                    observations: item.observations || '',
+                                    dateTime: item.dateTime || new Date().toISOString()
                                 });
-                                // Adiciona ao Set para evitar duplicidade dentro do próprio JSON
-                                suppliersInDb.add(cnpj);
-                                codesInDb.add(code);
+                                if (cnpj) seenInFileCnpj.add(cnpj);
+                                if (code) seenInFileCode.add(code);
                             }
                         });
 
@@ -1012,31 +1199,95 @@
                 };
                 reader.readAsText(file);
             });
-            
+
             // --- Lógica de Exportação para JSON ---
-            exportJsonBtn.addEventListener('click', () => {
-                const dataToExport = getSortedAndFilteredSuppliers();
-                if(dataToExport.length === 0){
-                    showToast('Nenhum fornecedor para exportar.', 'info');
+            const exportDataAsJson = (dataToExport, baseFileName) => {
+                if (dataToExport.length === 0) {
+                    showToast('Nenhum dado para exportar.', 'info');
                     return;
                 }
-
-                // Remove o campo 'timestamp' para um arquivo mais limpo
-                const cleanedData = dataToExport.map(({timestamp, ...rest}) => rest);
+                const cleanedData = dataToExport.map(({ id, ...rest }) => ({
+                    codFornecedor: rest.code || "",
+                    cnpj: rest.cnpj || "",
+                    nomeFornecedor: rest.name || "",
+                    codCliente: rest.clientCode || "",
+                    observations: rest.observations || "",
+                    dateTime: rest.dateTime || new Date().toISOString()
+                }));
 
                 const jsonString = JSON.stringify(cleanedData, null, 2);
-                const blob = new Blob([jsonString], {type: "application/json"});
+                const blob = new Blob([jsonString], { type: "application/json" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'fornecedores.json';
+                a.download = `${baseFileName}_${new Date().toISOString().slice(0, 10)}.json`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                showToast('Exportação iniciada!', 'success');
-            });
+                showToast(`Exportação de ${dataToExport.length} fornecedor(es) iniciada!`, 'success');
+            };
             
+            const exportDataAsXlsx = (dataToExport, baseFileName) => {
+                if (dataToExport.length === 0) {
+                    showToast('Nenhum dado para exportar.', 'info');
+                    return;
+                }
+                const cleanedData = dataToExport.map(({ id, ...rest }) => ({
+                    'Cód. Fornecedor': rest.code || "",
+                    'CNPJ': rest.cnpj || "",
+                    'Nome Fornecedor': rest.name || "",
+                    'Cód. Cliente': rest.clientCode || "",
+                    'Observações': rest.observations || "",
+                    'Data Cadastro': rest.dateTime || new Date().toISOString()
+                }));
+
+                const worksheet = XLSX.utils.json_to_sheet(cleanedData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Fornecedores");
+                XLSX.writeFile(workbook, `${baseFileName}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+                 showToast(`Exportação de ${dataToExport.length} fornecedor(es) iniciada!`, 'success');
+            };
+            
+            openExportModalBtn.addEventListener('click', () => {
+                document.getElementById('export-scope-selected').disabled = selectedSuppliers.size === 0;
+                if (selectedSuppliers.size === 0) {
+                     document.getElementById('export-scope-all').checked = true;
+                }
+                exportModal.classList.remove('hidden');
+            });
+
+            cancelExportBtn.addEventListener('click', () => {
+                exportModal.classList.add('hidden');
+            });
+
+            exportForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const scope = exportForm.elements['export-scope'].value;
+                const type = exportForm.elements['export-type'].value;
+                
+                let dataToExport;
+                let baseFileName;
+
+                if (scope === 'selected') {
+                    const selectedIds = Array.from(selectedSuppliers);
+                    dataToExport = suppliers.filter(s => selectedIds.includes(s.id));
+                    baseFileName = 'fornecedores_selecionados';
+                } else { // 'all'
+                    dataToExport = getSortedAndFilteredSuppliers();
+                    baseFileName = 'fornecedores_todos';
+                }
+
+                if (type === 'json') {
+                    exportDataAsJson(dataToExport, baseFileName);
+                } else { // 'excel'
+                    exportDataAsXlsx(dataToExport, baseFileName);
+                }
+
+                exportModal.classList.add('hidden');
+            });
+
+
             // --- Lógica de Navegação e Views ---
             const views = {
                 main: { element: mainView, title: 'Gerenciamento de Fornecedores', button: showMainViewBtn },
@@ -1050,24 +1301,22 @@
                     view.element.classList.add('hidden');
                     view.button.classList.remove('bg-indigo-600', 'text-white');
                 });
-                
+
                 const selectedView = views[viewName];
                 selectedView.element.classList.remove('hidden');
                 selectedView.button.classList.add('bg-indigo-600', 'text-white');
                 headerTitle.textContent = selectedView.title;
                 addSupplierBtn.style.display = viewName === 'main' ? 'flex' : 'none';
 
-                if (viewName === 'cnpj') {
-                    if(cnpjSearchPerformed) {
-                        newCnpjSearchBtn.classList.remove('hidden');
-                        headerCnpjForm.classList.add('hidden');
-                    } else {
-                        newCnpjSearchBtn.classList.add('hidden');
-                        headerCnpjForm.classList.remove('hidden');
-                    }
-                } else {
-                    newCnpjSearchBtn.classList.add('hidden');
-                    headerCnpjForm.classList.add('hidden');
+                headerSearchContainer.classList.add('hidden'); // Oculta por padrão
+                headerBulkDeleteContainer.classList.add('hidden'); // Garante que o de deletar some
+                
+                if(viewName === 'main') {
+                    updateBulkActionsUI(); // Mostra o de deletar se necessário
+                }
+                
+                if (viewName === 'cnpj' && cnpjSearchPerformed) {
+                    headerSearchContainer.classList.remove('hidden'); // Mostra se uma busca já foi feita
                 }
 
                 if (viewName === 'settings') {
@@ -1131,13 +1380,13 @@
                 nameInput.classList.add('bg-gray-100');
                 modalContent.classList.remove('hidden');
                 importLoader.classList.add('hidden');
-                isImportCancelled = false; 
+                isImportCancelled = false;
             };
 
             addSupplierBtn.addEventListener('click', () => openModal(null));
             closeModalBtn.addEventListener('click', closeModal);
             cancelBtn.addEventListener('click', closeModal);
-            
+
             let mouseDownOnBackdrop = false;
             supplierModal.addEventListener('mousedown', (event) => {
                 if (event.target === supplierModal) {
@@ -1151,32 +1400,31 @@
                 mouseDownOnBackdrop = false;
             });
             supplierModal.addEventListener('mouseleave', () => {
-                 mouseDownOnBackdrop = false;
+                mouseDownOnBackdrop = false;
             });
 
             // --- Lógica de Submissão do Formulário de Fornecedor ---
             const saveSupplier = async (supplierData, supplierId = null) => {
-                 if (!auth.currentUser) {
+                if (!auth.currentUser) {
                     showToast('Você precisa estar logado para salvar.', 'error');
                     return;
-                 }
+                }
                 try {
                     if (supplierId) {
                         const supplierDocRef = doc(db, 'suppliers_public', supplierId);
                         await updateDoc(supplierDocRef, supplierData);
                         showToast('Fornecedor atualizado com sucesso!', 'success');
                     } else {
-                         const dataToSave = { ...supplierData, timestamp: serverTimestamp() };
-                        await addDoc(collection(db, 'suppliers_public'), dataToSave);
+                        await addDoc(collection(db, 'suppliers_public'), supplierData);
                         showToast('Fornecedor cadastrado com sucesso!', 'success');
                     }
-                     closeModal();
-                } catch(error) {
-                     console.error("Erro ao salvar: ", error);
-                     showToast('Erro ao salvar fornecedor.', 'error');
+                    closeModal();
+                } catch (error) {
+                    console.error("Erro ao salvar: ", error);
+                    showToast('Erro ao salvar fornecedor.', 'error');
                 }
             }
-            
+
             supplierForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(supplierForm);
@@ -1188,19 +1436,20 @@
                     clientCode: formData.get('clientCode'),
                     observations: formData.get('observations'),
                 };
-                
+
                 if (!supplierId) {
+                    supplierData.dateTime = new Date().toISOString();
                     const isDuplicate = suppliers.some(s => s.cnpj === supplierData.cnpj || s.code === supplierData.code);
                     if (isDuplicate) {
-                         duplicateConfirmCallback = () => saveSupplier(supplierData);
-                         confirmDuplicateModal.classList.remove('hidden');
-                         return;
+                        duplicateConfirmCallback = () => saveSupplier(supplierData);
+                        confirmDuplicateModal.classList.remove('hidden');
+                        return;
                     }
                 }
-                
+
                 saveSupplier(supplierData, supplierId);
             });
-            
+
             cnpjInput.addEventListener('input', async (e) => {
                 const cnpj = e.target.value.replace(/\D/g, '');
                 if (cnpj.length < 14) {
@@ -1220,7 +1469,7 @@
                         }
                         const data = await response.json();
                         nameInput.value = data.razao_social || '';
-                        nameInput.readOnly = false; 
+                        nameInput.readOnly = false;
                         nameInput.classList.remove('bg-gray-100');
                     } catch (error) {
                         handleApiError(error, 'Busca de CNPJ no Modal');
@@ -1252,30 +1501,24 @@
                         );
                     });
                 }
-                
-                // CORREÇÃO 2: Lógica de ordenação robusta para tratar strings, números e timestamps
+
                 const sorted = [...filteredSuppliers].sort((a, b) => {
                     const key = sortConfig.key;
                     const direction = sortConfig.direction === 'asc' ? 1 : -1;
-                    
-                    const valA = a[key];
-                    const valB = b[key];
 
-                    if (valA === null || valA === undefined) return 1 * direction;
-                    if (valB === null || valB === undefined) return -1 * direction;
+                    let valA = a[key];
+                    let valB = b[key];
 
-                    // Ordenação para Timestamps do Firebase
-                    if (key === 'timestamp' && valA && typeof valA.toMillis === 'function') {
-                        return (valA.toMillis() - valB.toMillis()) * direction;
+                    if (key === 'dateTime') {
+                        valA = valA ? new Date(valA).getTime() : 0;
+                        valB = valB ? new Date(valB).getTime() : 0;
+                        return (valA - valB) * direction;
                     }
-                    
-                    // Ordenação numérica para o código
                     if (key === 'code') {
-                       return (Number(valA) - Number(valB)) * direction;
+                        return (Number(valA) - Number(valB)) * direction;
                     }
 
-                    // Ordenação de texto padrão para outros campos
-                    return String(valA).localeCompare(String(valB), 'pt-BR', { sensitivity: 'base' }) * direction;
+                    return String(valA || '').localeCompare(String(valB || ''), 'pt-BR', { sensitivity: 'base' }) * direction;
                 });
                 return sorted;
             }
@@ -1286,10 +1529,10 @@
                     searchFilter = e.target.value;
                     currentPage = 1;
                     renderTable();
-                }, 300); 
+                }, 300);
             });
 
-             tableHead.addEventListener('click', (e) => {
+            tableHead.addEventListener('click', (e) => {
                 const header = e.target.closest('[data-sort-key]');
                 if (!header) return;
 
@@ -1300,7 +1543,7 @@
                     sortConfig.key = key;
                     sortConfig.direction = 'asc';
                 }
-                
+
                 currentPage = 1;
                 renderTable();
             });
@@ -1319,7 +1562,6 @@
 
             // --- Lógica de Renderização da Tabela ---
             function renderTable() {
-                // Atualiza ícones de ordenação
                 document.querySelectorAll('thead th[data-sort-key]').forEach(th => {
                     const icon = th.querySelector('ion-icon');
                     if (th.dataset.sortKey === sortConfig.key) {
@@ -1330,49 +1572,69 @@
                         icon.classList.add('opacity-50');
                     }
                 });
-                
-                const processedSuppliers = getSortedAndFilteredSuppliers();
-                supplierTableBody.innerHTML = '';
-                const start = (currentPage - 1) * ROWS_PER_PAGE;
-                const end = start + ROWS_PER_PAGE;
-                const paginatedSuppliers = processedSuppliers.slice(start, end);
 
-                if (processedSuppliers.length === 0) {
-                     supplierTableBody.innerHTML = `<tr id="no-suppliers-row"><td colspan="7" class="text-center py-10 text-gray-500"><ion-icon name="file-tray-outline" class="text-4xl mx-auto"></ion-icon><p class="mt-2">Nenhum fornecedor encontrado.</p></td></tr>`;
-                } else {
-                    paginatedSuppliers.forEach(supplier => {
-                        const isChecked = selectedSuppliers.has(supplier.id);
-                        const tr = document.createElement('tr');
-                        tr.className = `border-b hover:bg-gray-50 ${isChecked ? 'bg-indigo-50' : ''}`;
-                        tr.innerHTML = `
-                            <td class="py-3 px-4 w-12"><input type="checkbox" class="row-checkbox h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" data-id="${supplier.id}" ${isChecked ? 'checked' : ''}></td>
-                            <td class="py-3 px-4 copyable-cell whitespace-nowrap">${supplier.code}</td>
-                            <td class="py-3 px-4 copyable-cell">${supplier.cnpj}</td>
-                            <td class="py-3 px-4 font-medium copyable-cell">${supplier.name}</td>
-                            <td class="py-3 px-4 copyable-cell">${supplier.clientCode || ''}</td>
-                            <td class="py-3 px-4 text-sm text-gray-500 max-w-[200px] truncate copyable-cell" title="${supplier.observations || ''}">${supplier.observations || ''}</td>
-                            <td class="py-3 px-4">
-                                <div class="flex space-x-2">
-                                    <button onclick="openModal('${supplier.id}')" class="text-indigo-600 hover:text-indigo-800 p-1"><ion-icon name="create-outline"></ion-icon></button>
-                                </div>
-                            </td>
-                        `;
-                        supplierTableBody.appendChild(tr);
-                    });
-                }
-                renderPagination(processedSuppliers.length);
-                updateBulkActionsUI();
+                supplierTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-10">
+                            <div class="flex justify-center items-center space-x-2 text-gray-500">
+                                <svg class="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Carregando dados...</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                setTimeout(() => {
+                    const processedSuppliers = getSortedAndFilteredSuppliers();
+                    supplierTableBody.innerHTML = '';
+                    const start = (currentPage - 1) * ROWS_PER_PAGE;
+                    const end = start + ROWS_PER_PAGE;
+                    const paginatedSuppliers = processedSuppliers.slice(start, end);
+
+                    if (processedSuppliers.length === 0) {
+                        supplierTableBody.innerHTML = `<tr id="no-suppliers-row"><td colspan="8" class="text-center py-10 text-gray-500"><ion-icon name="file-tray-outline" class="text-4xl mx-auto"></ion-icon><p class="mt-2">Nenhum fornecedor encontrado.</p></td></tr>`;
+                    } else {
+                        paginatedSuppliers.forEach(supplier => {
+                            const isChecked = selectedSuppliers.has(supplier.id);
+                            const tr = document.createElement('tr');
+                            tr.className = `border-b hover:bg-gray-50 ${isChecked ? 'bg-indigo-50' : ''}`;
+                            tr.innerHTML = `
+                                <td class="py-1 px-4 w-12"><input type="checkbox" class="row-checkbox h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" data-id="${supplier.id}" ${isChecked ? 'checked' : ''}></td>
+                                <td class="py-1 px-4 copyable-cell whitespace-nowrap">${supplier.code}</td>
+                                <td class="py-1 px-4 copyable-cell">${supplier.cnpj}</td>
+                                <td class="py-1 px-4 font-medium copyable-cell">${supplier.name}</td>
+                                <td class="py-1 px-4 copyable-cell">${supplier.clientCode || ''}</td>
+                                <td class="py-1 px-4 text-sm text-gray-500 max-w-[200px] truncate copyable-cell" title="${supplier.observations || ''}">${supplier.observations || ''}</td>
+                                <td class="py-1 px-4">
+                                    <div class="flex space-x-2">
+                                        <button onclick="openModal('${supplier.id}')" class="text-indigo-600 hover:text-indigo-800 p-1" title="Editar Fornecedor"><ion-icon name="create-outline"></ion-icon></button>
+                                    </div>
+                                </td>
+                                <td class="py-1 px-4">
+                                    <button onclick="showInfoModal('${supplier.id}')" class="text-gray-500 hover:text-blue-600 p-1" title="Ver Detalhes"><ion-icon name="information-circle-outline" class="text-xl"></ion-icon></button>
+                                </td>
+                            `;
+                            supplierTableBody.appendChild(tr);
+                        });
+                    }
+                    renderPagination(processedSuppliers.length);
+                    updateSelectAllCheckboxState();
+                    updateBulkActionsUI();
+                }, 10);
             }
 
             // --- Lógica de Paginação e Exclusão em Massa ---
             function renderPagination(totalItems) {
                 paginationControls.innerHTML = '';
                 const totalPages = Math.ceil(totalItems / ROWS_PER_PAGE);
-                
+
                 if (totalItems === 0) return;
 
                 const infoHTML = `<div class="text-sm text-gray-600">Mostrando ${Math.min(totalItems, 1 + (currentPage - 1) * ROWS_PER_PAGE)} a ${Math.min(currentPage * ROWS_PER_PAGE, totalItems)} de ${totalItems}</div>`;
-                
+
                 if (totalPages <= 1) {
                     paginationControls.innerHTML = infoHTML;
                     return;
@@ -1380,28 +1642,28 @@
 
                 let buttonsHTML = `<div class="flex items-center">`;
                 buttonsHTML += `<button onclick="changePage(${currentPage - 1})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>`;
-                
+
                 let startPage = Math.max(1, currentPage - 2);
                 let endPage = Math.min(totalPages, currentPage + 2);
 
                 if (startPage > 1) {
                     buttonsHTML += `<button onclick="changePage(1)" class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-white text-gray-700 hover:bg-gray-100">1</button>`;
                     if (startPage > 2) {
-                       buttonsHTML += `<span class="px-3 py-1 mx-1 text-sm font-medium text-gray-500">...</span>`;
+                        buttonsHTML += `<span class="px-3 py-1 mx-1 text-sm font-medium text-gray-500">...</span>`;
                     }
                 }
 
                 for (let i = startPage; i <= endPage; i++) {
-                     if (i === currentPage) {
+                    if (i === currentPage) {
                         buttonsHTML += `<button class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-indigo-600 text-white">${i}</button>`;
                     } else {
                         buttonsHTML += `<button onclick="changePage(${i})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-white text-gray-700 hover:bg-gray-100">${i}</button>`;
                     }
                 }
 
-                 if (endPage < totalPages) {
+                if (endPage < totalPages) {
                     if (endPage < totalPages - 1) {
-                         buttonsHTML += `<span class="px-3 py-1 mx-1 text-sm font-medium text-gray-500">...</span>`;
+                        buttonsHTML += `<span class="px-3 py-1 mx-1 text-sm font-medium text-gray-500">...</span>`;
                     }
                     buttonsHTML += `<button onclick="changePage(${totalPages})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-white text-gray-700 hover:bg-gray-100">${totalPages}</button>`;
                 }
@@ -1417,37 +1679,70 @@
                 const totalPages = Math.ceil(totalItems / ROWS_PER_PAGE);
                 if (newPage >= 1 && newPage <= totalPages) {
                     currentPage = newPage;
-                    selectAllCheckbox.checked = false;
                     renderTable();
                 }
             }
 
             function updateBulkActionsUI() {
-                if (selectedSuppliers.size > 0) {
-                    bulkActionsContainer.classList.remove('hidden');
-                    bulkDeleteBtn.querySelector('span').textContent = `Excluir ${selectedSuppliers.size} selecionado(s)`;
+                if (selectedSuppliers.size > 0 && mainView.style.display !== 'none' ) {
+                    headerBulkDeleteContainer.classList.remove('hidden');
+                    bulkDeleteBtnHeader.querySelector('span').textContent = `Excluir ${selectedSuppliers.size}`;
                 } else {
-                    bulkActionsContainer.classList.add('hidden');
+                    headerBulkDeleteContainer.classList.add('hidden');
                 }
             }
+            
+            function updateSelectAllCheckboxState() {
+                const processedSuppliers = getSortedAndFilteredSuppliers();
+                const start = (currentPage - 1) * ROWS_PER_PAGE;
+                const end = start + ROWS_PER_PAGE;
+                const paginatedSuppliers = processedSuppliers.slice(start, end);
+                
+                if (selectAllMode === 'all') {
+                    const allFilteredCount = processedSuppliers.length;
+                    const allFilteredAreSelected = allFilteredCount > 0 && processedSuppliers.every(s => selectedSuppliers.has(s.id));
+                    selectAllCheckbox.checked = allFilteredAreSelected;
+                } else { // 'page' mode
+                    const totalOnPage = paginatedSuppliers.length;
+                    const selectedOnPage = paginatedSuppliers.filter(s => selectedSuppliers.has(s.id)).length;
+                    selectAllCheckbox.checked = totalOnPage > 0 && totalOnPage === selectedOnPage;
+                }
+            }
+            
             selectAllCheckbox.addEventListener('change', (e) => {
                 const isChecked = e.target.checked;
-                const checkboxes = document.querySelectorAll('.row-checkbox');
-                checkboxes.forEach(checkbox => {
-                    const id = checkbox.dataset.id;
-                    checkbox.checked = isChecked;
-                    if (isChecked) selectedSuppliers.add(id); else selectedSuppliers.delete(id);
-                });
-                renderTable();
+                if (selectAllMode === 'all') {
+                    const allFilteredIds = getSortedAndFilteredSuppliers().map(s => s.id);
+                    if (isChecked) {
+                        allFilteredIds.forEach(id => selectedSuppliers.add(id));
+                    } else {
+                        selectedSuppliers.clear();
+                    }
+                } else { // mode === 'page'
+                    const checkboxesOnPage = document.querySelectorAll('.row-checkbox');
+                    checkboxesOnPage.forEach(checkbox => {
+                        const id = checkbox.dataset.id;
+                        if (isChecked) {
+                            selectedSuppliers.add(id);
+                        } else {
+                            selectedSuppliers.delete(id);
+                        }
+                    });
+                }
+                renderTable(); 
             });
+
             supplierTableBody.addEventListener('change', (e) => {
                 if (e.target.classList.contains('row-checkbox')) {
                     const id = e.target.dataset.id;
-                    if (e.target.checked) selectedSuppliers.add(id); else selectedSuppliers.delete(id);
-                    const totalOnPage = document.querySelectorAll('.row-checkbox').length;
-                    const selectedOnPage = document.querySelectorAll('.row-checkbox:checked').length;
-                    selectAllCheckbox.checked = totalOnPage > 0 && totalOnPage === selectedOnPage;
-                    renderTable();
+                    if (e.target.checked) {
+                        selectedSuppliers.add(id);
+                    } else {
+                        selectedSuppliers.delete(id);
+                    }
+                    e.target.closest('tr').classList.toggle('bg-indigo-50', e.target.checked);
+                    updateBulkActionsUI();
+                    updateSelectAllCheckboxState();
                 }
             });
 
@@ -1458,13 +1753,38 @@
             });
 
             confirmDeleteBtn.addEventListener('click', () => {
-                if(typeof deleteConfirmCallback === 'function') {
+                if (typeof deleteConfirmCallback === 'function') {
                     deleteConfirmCallback();
                 }
                 confirmDeleteModal.classList.add('hidden');
                 deleteConfirmCallback = null;
             });
             
+            bulkDeleteBtnHeader.addEventListener('click', () => {
+                if (selectedSuppliers.size === 0) return;
+
+                confirmMessage.textContent = `Você tem certeza que deseja excluir ${selectedSuppliers.size} fornecedor(es) selecionado(s)?`;
+
+                deleteConfirmCallback = async () => {
+                    if (!auth.currentUser) return;
+
+                    const deletePromises = Array.from(selectedSuppliers).map(id => deleteDoc(doc(db, 'suppliers_public', id)));
+                    const totalDeleted = selectedSuppliers.size;
+                    try {
+                        await Promise.all(deletePromises);
+                        showToast(`${totalDeleted} fornecedor(es) removido(s).`, 'info');
+                    } catch (error) {
+                        showToast('Erro ao remover fornecedores.', 'error');
+                    } finally {
+                        selectedSuppliers.clear();
+                        renderTable();
+                    }
+                };
+
+                confirmDeleteModal.classList.remove('hidden');
+            });
+
+
             // Lógica do Modal de Confirmação de Duplicidade
             cancelDuplicateBtn.addEventListener('click', () => {
                 confirmDuplicateModal.classList.add('hidden');
@@ -1472,41 +1792,55 @@
             });
 
             confirmDuplicateBtn.addEventListener('click', () => {
-                if(typeof duplicateConfirmCallback === 'function') {
+                if (typeof duplicateConfirmCallback === 'function') {
                     duplicateConfirmCallback();
                 }
                 confirmDuplicateModal.classList.add('hidden');
                 duplicateConfirmCallback = null;
             });
-            
-            bulkDeleteBtn.addEventListener('click', () => {
-                if (selectedSuppliers.size === 0) return;
 
-                confirmMessage.textContent = `Você tem certeza que deseja excluir ${selectedSuppliers.size} fornecedor(es) selecionado(s)?`;
-                
-                deleteConfirmCallback = async () => {
-                    if (!auth.currentUser) return;
-                    
-                    const deletePromises = Array.from(selectedSuppliers).map(id => deleteDoc(doc(db, 'suppliers_public', id)));
-                    const totalDeleted = selectedSuppliers.size;
-                    try {
-                        await Promise.all(deletePromises);
-                        showToast(`${totalDeleted} fornecedor(es) removido(s).`, 'info');
-                    } catch(error) {
-                        showToast('Erro ao remover fornecedores.', 'error');
-                    } finally {
-                        selectedSuppliers.clear();
-                        selectAllCheckbox.checked = false;
-                    }
-                };
+            // --- Lógica de Configurações ---
+            function loadSettings() {
+                const savedMode = localStorage.getItem('selectAllMode') || 'page';
+                selectAllMode = savedMode;
+                if (savedMode === 'all') {
+                    selectModeAllRadio.checked = true;
+                } else {
+                    selectModePageRadio.checked = true;
+                }
 
-                confirmDeleteModal.classList.remove('hidden');
+                const savedRows = localStorage.getItem('rowsPerPage') || '50';
+                ROWS_PER_PAGE = parseInt(savedRows, 10);
+                rowsPerPageSelect.value = savedRows;
+            }
+
+            selectModePageRadio.addEventListener('change', () => {
+                if (selectModePageRadio.checked) {
+                    selectAllMode = 'page';
+                    localStorage.setItem('selectAllMode', 'page');
+                    showToast('Seleção alterada para "Página Atual"', 'info');
+                }
             });
 
-             // --- Lógica de Configurações ---
+            selectModeAllRadio.addEventListener('change', () => {
+                if (selectModeAllRadio.checked) {
+                    selectAllMode = 'all';
+                    localStorage.setItem('selectAllMode', 'all');
+                    showToast('Seleção alterada para "Todos os Itens"', 'info');
+                }
+            });
+            
+            rowsPerPageSelect.addEventListener('change', () => {
+                ROWS_PER_PAGE = parseInt(rowsPerPageSelect.value, 10);
+                localStorage.setItem('rowsPerPage', ROWS_PER_PAGE);
+                currentPage = 1; 
+                renderTable();
+                showToast(`Exibindo ${ROWS_PER_PAGE} linhas por página.`, 'info');
+            });
+
             resetPasswordBtn.addEventListener('click', async () => {
                 const user = auth.currentUser;
-                if(!user) {
+                if (!user) {
                     showToast('Você precisa estar logado para redefinir a senha.', 'error');
                     return;
                 }
@@ -1518,6 +1852,42 @@
                     showToast('Falha ao enviar e-mail de redefinição. Tente novamente.', 'error');
                 }
             });
+
+            // --- NOVO: Lógica do Modal de Informações ---
+            closeInfoModalBtn.addEventListener('click', () => infoModal.classList.add('hidden'));
+            okInfoModalBtn.addEventListener('click', () => infoModal.classList.add('hidden'));
+
+            window.showInfoModal = (supplierId) => {
+                const supplier = suppliers.find(s => s.id === supplierId);
+                if (!supplier) {
+                    showToast('Fornecedor não encontrado.', 'error');
+                    return;
+                }
+
+                infoModalContent.innerHTML = `
+                    <div class="grid grid-cols-3 gap-x-4 gap-y-2">
+                        <p class="font-semibold text-gray-600 col-span-1">Cód. Fornecedor:</p>
+                        <p class="text-gray-800 col-span-2">${supplier.code || 'N/A'}</p>
+
+                        <p class="font-semibold text-gray-600 col-span-1">CNPJ:</p>
+                        <p class="text-gray-800 col-span-2">${supplier.cnpj || 'N/A'}</p>
+
+                        <p class="font-semibold text-gray-600 col-span-1">Nome:</p>
+                        <p class="text-gray-800 col-span-2">${supplier.name || 'N/A'}</p>
+
+                        <p class="font-semibold text-gray-600 col-span-1">Cód. Cliente:</p>
+                        <p class="text-gray-800 col-span-2">${supplier.clientCode || 'N/A'}</p>
+                        
+                        <p class="font-semibold text-gray-600 col-span-1">Data de Cadastro:</p>
+                        <p class="text-gray-800 col-span-2">${formatSupplierDate(supplier.dateTime)}</p>
+
+                        <p class="font-semibold text-gray-600 col-span-1">Observações:</p>
+                        <p class="text-gray-800 col-span-2 break-words">${supplier.observations || 'N/A'}</p>
+                    </div>
+                `;
+                infoModal.classList.remove('hidden');
+            };
+
 
             // --- Tratamento de Erros de API ---
             function handleApiError(error, context) {
@@ -1538,7 +1908,7 @@
                             message = `Muitas solicitações para ${context}. Tente novamente em alguns instantes.`;
                             break;
                         default:
-                             message = `Erro ${error.status} ao consultar ${context}. Tente mais tarde.`;
+                            message = `Erro ${error.status} ao consultar ${context}. Tente mais tarde.`;
                     }
                 }
                 showToast(message, 'error');
@@ -1562,7 +1932,7 @@
                 cepForm.classList.add('hidden');
                 addressForm.classList.remove('hidden');
             });
-            
+
             cepInput.addEventListener('input', (e) => {
                 let value = e.target.value.replace(/\D/g, '');
                 if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2');
@@ -1577,31 +1947,31 @@
             addressForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500"><p>Buscando...</p></div>`;
-                
+
                 const uf = ufInput.value.trim();
                 const city = cityInput.value.trim();
                 const street = expandStreetAbbreviations(streetInput.value.trim());
 
                 if (street.length < 3) {
-                     cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>O nome do logradouro deve ter pelo menos 3 caracteres.</p></div>`;
-                     return;
+                    cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>O nome do logradouro deve ter pelo menos 3 caracteres.</p></div>`;
+                    return;
                 }
 
                 const encodedUf = encodeURIComponent(uf);
                 const encodedCity = encodeURIComponent(city);
                 const encodedStreet = encodeURIComponent(street);
-                
+
                 try {
                     const response = await fetch(`${corsProxy}https://viacep.com.br/ws/${encodedUf}/${encodedCity}/${encodedStreet}/json/`);
                     if (!response.ok) throw { status: response.status };
 
                     const data = await response.json();
                     if (data.erro || data.length === 0) {
-                         cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500"><p>Nenhum endereço encontrado com os critérios informados.</p></div>`;
-                         return;
+                        cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500"><p>Nenhum endereço encontrado com os critérios informados.</p></div>`;
+                        return;
                     }
-                    
-                    if(data.length === 1) {
+
+                    if (data.length === 1) {
                         renderViaCepResult(data[0]);
                         return;
                     }
@@ -1634,13 +2004,28 @@
             });
 
             // --- Lógica de Busca de CNPJ ---
+            newCnpjSearchBtn.addEventListener('click', () => {
+                cnpjSearchContainer.classList.remove('hidden');
+                headerSearchContainer.classList.add('hidden');
+                cnpjResultDiv.innerHTML = '';
+                viewCnpjInput.value = '';
+                viewCnpjInput.focus();
+                cnpjSearchPerformed = false;
+            });
+
+            cnpjSearchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                performCnpjSearch(viewCnpjInput.value);
+            });
+
             const performCnpjSearch = async (cnpjValue) => {
-                 const cnpj = cnpjValue.replace(/\D/g, '');
+                const cnpj = cnpjValue.replace(/\D/g, '');
                 if (cnpj.length !== 14) {
                     showToast('CNPJ inválido. Deve conter 14 dígitos.', 'error');
                     return;
                 }
-                cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center text-gray-500"><p>Buscando...</p></div>`;
+                
+                cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center text-gray-500 h-full"><p>Buscando...</p></div>`;
                 try {
                     const response = await fetch(`${corsProxy}https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
                     if (!response.ok) {
@@ -1649,13 +2034,13 @@
                     }
                     const data = await response.json();
                     
-                    if (!cnpjSearchPerformed) {
-                        cnpjSearchPerformed = true;
-                    }
-                    
+                    cnpjSearchPerformed = true;
+                    cnpjSearchContainer.classList.add('hidden');
+                    headerSearchContainer.classList.remove('hidden');
+
                     const cleanCnpj = data.cnpj.replace(/\D/g, '');
                     const cnpjaUrl = `https://cnpja.com/office/${cleanCnpj}`;
-                    
+
                     const status = data.descricao_situacao_cadastral;
                     let statusHtml = '';
                     if (status === 'ATIVA') {
@@ -1683,7 +2068,7 @@
                                 </div>
                             </div>`;
                     }
-                    
+
                     const renderCnaes = (cnaes) => {
                         if (!cnaes || cnaes.length === 0) return '<p class="text-gray-500">Nenhuma atividade secundária encontrada.</p>';
                         return cnaes.map(cnae => createStyledField('ellipse-outline', cnae.codigo, cnae.descricao, true)).join('');
@@ -1760,28 +2145,16 @@
                 } catch (error) {
                     handleApiError(error, 'Busca de CNPJ');
                     cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>Falha ao buscar CNPJ. Verifique o número e tente novamente.</p></div>`;
-                } finally {
-                    headerCnpjForm.classList.add('hidden');
-                    newCnpjSearchBtn.classList.remove('hidden');
                 }
             };
-            
-            headerCnpjInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
+
+            viewCnpjInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
             cnpjInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
 
-            headerCnpjForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                performCnpjSearch(headerCnpjInput.value);
-            });
-            newCnpjSearchBtn.addEventListener('click', () => {
-                newCnpjSearchBtn.classList.add('hidden');
-                headerCnpjForm.classList.remove('hidden');
-                headerCnpjInput.focus();
-            });
-            
+
             document.addEventListener('keydown', (e) => {
                 let shortcut_triggered = false;
-                
+
                 if (e.ctrlKey && e.key.toLowerCase() === 'g') {
                     shortcut_triggered = true;
                     openModal(null);
@@ -1792,37 +2165,46 @@
                     switchView('main');
                     setTimeout(() => supplierSearchInput.focus(), 50);
                 }
-                
+
                 if (e.ctrlKey && e.key.toLowerCase() === 's') {
                     shortcut_triggered = true;
                     switchView('cep');
-                    setTimeout(() => cepInput.focus(), 50);
+                    setTimeout(() => {
+                        tabByCep.click();
+                        cepInput.focus();
+                    }, 50);
+                }
+                
+                 if (e.ctrlKey && e.key.toLowerCase() === 'a') {
+                    shortcut_triggered = true;
+                    switchView('cep');
+                    setTimeout(() => {
+                        tabByAddress.click();
+                        streetInput.focus();
+                    }, 50);
                 }
 
                 if (e.ctrlKey && e.key.toLowerCase() === 'd') {
                     shortcut_triggered = true;
-                    const isOnCnpjView = !cnpjSearchView.classList.contains('hidden');
-                    if (!isOnCnpjView) {
-                        switchView('cnpj');
+                    if (views.cnpj.element.classList.contains('hidden')) {
+                         switchView('cnpj');
                     }
-                    
-                    setTimeout(() => {
-                        if (newCnpjSearchBtn.classList.contains('hidden')) {
-                            headerCnpjInput.focus();
-                        } else {
-                            newCnpjSearchBtn.click();
-                        }
-                    }, 50);
+                   
+                    if (cnpjSearchPerformed) {
+                        newCnpjSearchBtn.click();
+                    } else {
+                         setTimeout(() => viewCnpjInput.focus(), 50);
+                    }
                 }
 
-                if(shortcut_triggered) {
+                if (shortcut_triggered) {
                     e.preventDefault();
                 }
             });
 
 
             // --- Funções Utilitárias ---
-             function expandStreetAbbreviations(street) {
+            function expandStreetAbbreviations(street) {
                 if (!street) return '';
                 let processedStreet = street.trim();
                 const abbreviations = [
@@ -1892,8 +2274,8 @@
                     if (!response.ok) throw { status: response.status };
 
                     const data = await response.json();
-                    if(data.erro) {
-                        throw { status: 404 }; // Simula um 404 para CEP não encontrado
+                    if (data.erro) {
+                        throw { status: 404 };
                     }
                     renderViaCepResult(data);
                 } catch (error) {
@@ -1902,12 +2284,33 @@
                 }
             }
 
+            function formatSupplierDate(dateValue) {
+                if (!dateValue) return 'N/A';
+                let date;
+                if (typeof dateValue.toDate === 'function') {
+                    date = dateValue.toDate();
+                } else if (typeof dateValue === 'string') {
+                    date = new Date(dateValue);
+                } else if (dateValue instanceof Date) {
+                    date = dateValue;
+                } else {
+                    return 'Data inválida';
+                }
+                if (isNaN(date.getTime())) {
+                    return 'Data inválida';
+                }
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            };
+
             function formatDate(dateStr) {
                 if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return 'N/A';
                 const [year, month, day] = dateStr.split('-');
                 return `${day}/${month}/${year}`;
             }
-            
+
             function formatCnpj(value) {
                 if (!value) return "";
                 let cnpj = String(value).replace(/\D/g, '');
@@ -1921,10 +2324,10 @@
             function formatPhone(phone) {
                 if (!phone || typeof phone !== 'string') return '';
                 const cleaned = phone.replace(/\D/g, '');
-                if (cleaned.length === 11) { // Celular com 9 + DDD
+                if (cleaned.length === 11) {
                     return `${cleaned.substring(0, 2)} ${cleaned.substring(2, 7)}-${cleaned.substring(7)}`;
                 }
-                if (cleaned.length === 10) { // Fixo + DDD
+                if (cleaned.length === 10) {
                     return `${cleaned.substring(0, 2)} ${cleaned.substring(2, 6)}-${cleaned.substring(6)}`;
                 }
                 return phone;
@@ -1968,7 +2371,7 @@
                     </div>`;
             }
 
-            function createCopyableField(label, value, showLabel=true) {
+            function createCopyableField(label, value, showLabel = true) {
                 const cleanValue = value || 'Não informado';
                 const labelHtml = showLabel ? `<span class="font-medium text-gray-600">${label}:</span>` : '';
                 return `
@@ -1984,9 +2387,12 @@
             }
 
             // Inicialização da parte principal da aplicação
+            loadSettings();
             renderTable();
         });
 
     </script>
 </body>
+
 </html>
+

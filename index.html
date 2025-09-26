@@ -177,16 +177,22 @@
                 opacity: 0.7;
             }
         }
-        
+
         /* Estilos para Tabela Rolável */
         #main-view .table-container {
             flex-grow: 1;
             overflow-y: auto;
         }
+
         #main-view thead {
             position: sticky;
             top: 0;
             z-index: 10;
+        }
+
+        /* Estilos para o dropdown de filtro */
+        #filter-column-dropdown ul {
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
     </style>
 </head>
@@ -233,7 +239,8 @@
                             class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required>
                         <button type="button" id="password-toggle"
-                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" title="Mostrar/Ocultar senha">
+                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                            title="Mostrar/Ocultar senha">
                             <ion-icon name="eye-outline" id="password-toggle-icon"></ion-icon>
                         </button>
                     </div>
@@ -316,19 +323,22 @@
             <header class="bg-white shadow-sm p-4 h-16 flex items-center justify-between z-10">
                 <h1 id="header-title" class="text-2xl font-bold text-gray-800">Gerenciamento de Fornecedores</h1>
                 <div class="flex items-center space-x-4">
-                     <div id="header-search-container" class="w-full max-w-xs hidden">
+                    <div id="header-search-container" class="w-full max-w-xs hidden">
                         <button id="new-cnpj-search-btn"
-                            class="w-full bg-indigo-600 text-white px-4 py-2 text-sm rounded-md hover:bg-indigo-700 flex items-center justify-center space-x-2" title="Realizar uma nova busca de CNPJ (CTRL+D)">
+                            class="w-full bg-indigo-600 text-white px-4 py-2 text-sm rounded-md hover:bg-indigo-700 flex items-center justify-center space-x-2"
+                            title="Realizar uma nova busca de CNPJ (CTRL+D)">
                             <ion-icon name="search-outline"></ion-icon>
                             <span>Nova Busca (CTRL+D)</span>
                         </button>
                     </div>
-                     <div id="header-bulk-delete-container" class="hidden">
-                         <button id="bulk-delete-btn-header" class="bg-red-500 text-white px-4 py-2 text-sm rounded-md hover:bg-red-600 flex items-center space-x-2" title="Excluir fornecedores selecionados">
-                             <ion-icon name="trash-outline"></ion-icon>
-                             <span>Excluir</span>
-                         </button>
-                     </div>
+                    <div id="header-bulk-delete-container" class="hidden">
+                        <button id="bulk-delete-btn-header"
+                            class="bg-red-500 text-white px-4 py-2 text-sm rounded-md hover:bg-red-600 flex items-center space-x-2"
+                            title="Excluir fornecedores selecionados">
+                            <ion-icon name="trash-outline"></ion-icon>
+                            <span>Excluir</span>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -338,17 +348,79 @@
                         <div class="flex items-center space-x-4">
                             <h2 class="text-xl font-semibold text-gray-700">Lista de Fornecedores</h2>
                             <button id="open-export-modal-btn"
-                                class="bg-blue-500 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-600 flex items-center space-x-2" title="Exportar dados">
+                                class="bg-blue-500 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-600 flex items-center space-x-2"
+                                title="Exportar dados">
                                 <ion-icon name="download-outline"></ion-icon>
                                 <span>Exportar</span>
                             </button>
                         </div>
-                        <div class="relative">
-                            <input type="text" id="supplier-search-input"
-                                placeholder="Buscar por Cód, CNPJ, Nome, etc... (CTRL+F)"
-                                class="w-[36rem] pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <ion-icon name="search-outline"
-                                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-medium text-gray-600">Coluna filtrada:</span>
+                            <!-- Dropdown de Filtro de Coluna -->
+                            <div id="filter-column-dropdown" class="relative">
+                                <button id="filter-column-btn"
+                                    class="flex items-center space-x-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <span id="filter-column-text">Todas as Colunas</span>
+                                    <ion-icon name="chevron-down-outline" class="text-gray-500"></ion-icon>
+                                </button>
+                                <ul id="filter-column-list"
+                                    class="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-20 hidden origin-top-right transform opacity-0 scale-95">
+                                    <li data-value="all"
+                                        class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Todas
+                                        as Colunas</li>
+                                    <li data-value="code"
+                                        class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Cód.
+                                    </li>
+                                    <li data-value="cnpj"
+                                        class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">CNPJ
+                                    </li>
+                                    <li data-value="name"
+                                        class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Nome
+                                    </li>
+                                    <li data-value="clientCode"
+                                        class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Cód.
+                                        Cliente</li>
+                                    <li data-value="observations"
+                                        class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                                        Observações</li>
+                                </ul>
+                            </div>
+                            <button id="clear-filter-btn"
+                                class="p-2 text-gray-500 hover:text-gray-800 rounded-full"
+                                title="Limpar filtro">
+                                <svg class="w-6 h-6 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 64 64"
+                                    xmlns="http://www.w3.org/2000/svg">
+
+                                    <!-- Cabo da vassoura -->
+                                    <line x1="32" y1="4" x2="32" y2="32" stroke="currentColor" stroke-width="4"
+                                        stroke-linecap="round" />
+
+                                    <!-- Base de madeira -->
+                                    <rect x="26" y="30" width="12" height="6" rx="2" ry="2" fill="currentColor" />
+
+                                    <!-- Corpo da vassoura -->
+                                    <path d="M16 36h32l4 18c1 5-3 6-8 6H20c-5 0-9-1-8-6l4-18z" stroke="currentColor"
+                                        stroke-width="3" stroke-linejoin="round" fill="none" />
+
+                                    <!-- Cerdas -->
+                                    <line x1="20" y1="60" x2="20" y2="50" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" />
+                                    <line x1="28" y1="60" x2="28" y2="50" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" />
+                                    <line x1="36" y1="60" x2="36" y2="50" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" />
+                                    <line x1="44" y1="60" x2="44" y2="50" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" />
+                                </svg>
+                            </button>
+
+                            <!-- Input de Busca -->
+                            <div class="relative">
+                                <input type="text" id="supplier-search-input" placeholder="Buscar... (CTRL+F)"
+                                    class="w-[36rem] pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <ion-icon name="search-outline"
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
+                            </div>
                         </div>
                     </div>
 
@@ -357,7 +429,8 @@
                             <thead class="bg-gray-100" style="background-color: var(--table-header);">
                                 <tr>
                                     <th class="py-1 px-4 w-12"><input type="checkbox" id="select-all-checkbox"
-                                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" title="Selecionar Todos">
+                                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            title="Selecionar Todos">
                                     </th>
                                     <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600 cursor-pointer whitespace-nowrap"
                                         data-sort-key="code">
@@ -382,7 +455,8 @@
                             </tbody>
                         </table>
                     </div>
-                    <div id="pagination-controls" class="flex flex-wrap justify-center items-center gap-4 mt-auto pt-4 border-t"></div>
+                    <div id="pagination-controls"
+                        class="flex flex-wrap justify-center items-center gap-4 mt-auto pt-4 border-t"></div>
                 </div>
             </main>
 
@@ -462,7 +536,8 @@
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">Consultar CNPJ</h2>
                     <p class="text-gray-500">Busque por um CNPJ para ver os detalhes da empresa. (CTRL+D)</p>
                     <form id="cnpj-search-form" class="mt-6">
-                        <label for="view-cnpj-input" class="block text-sm font-medium text-gray-700">Digite o CNPJ</label>
+                        <label for="view-cnpj-input" class="block text-sm font-medium text-gray-700">Digite o
+                            CNPJ</label>
                         <div class="flex items-center space-x-2 mt-1">
                             <input type="text" id="view-cnpj-input" placeholder="00.000.000/0000-00"
                                 class="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
@@ -504,18 +579,21 @@
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Preferências da Tabela</h3>
                         <div class="mb-6">
                             <p class="text-sm font-medium text-gray-600">Comportamento do "Selecionar Tudo"</p>
-                            <p class="text-xs text-gray-500 mb-2">Escolha o que acontece ao marcar a caixa de seleção principal na tabela de fornecedores.</p>
+                            <p class="text-xs text-gray-500 mb-2">Escolha o que acontece ao marcar a caixa de seleção
+                                principal na tabela de fornecedores.</p>
                             <fieldset class="mt-2">
                                 <legend class="sr-only">Opções de seleção</legend>
                                 <div class="space-y-2">
                                     <div class="flex items-center">
-                                        <input id="select-mode-page" name="select-mode" type="radio" value="page" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                        <input id="select-mode-page" name="select-mode" type="radio" value="page"
+                                            class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
                                         <label for="select-mode-page" class="ml-3 block text-sm text-gray-700">
                                             Selecionar apenas os itens da página atual
                                         </label>
                                     </div>
                                     <div class="flex items-center">
-                                        <input id="select-mode-all" name="select-mode" type="radio" value="all" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                        <input id="select-mode-all" name="select-mode" type="radio" value="all"
+                                            class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
                                         <label for="select-mode-all" class="ml-3 block text-sm text-gray-700">
                                             Selecionar todos os itens (em todas as páginas)
                                         </label>
@@ -523,9 +601,11 @@
                                 </div>
                             </fieldset>
                         </div>
-                         <div class="flex items-center justify-between">
-                            <label for="rows-per-page-select" class="text-sm font-medium text-gray-600">Linhas por página</label>
-                            <select id="rows-per-page-select" class="mt-1 block w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <div class="flex items-center justify-between">
+                            <label for="rows-per-page-select" class="text-sm font-medium text-gray-600">Linhas por
+                                página</label>
+                            <select id="rows-per-page-select"
+                                class="mt-1 block w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                                 <option value="10">10</option>
                                 <option value="20">20</option>
                                 <option value="50">50</option>
@@ -608,7 +688,8 @@
 
                     <div class="flex justify-end pt-4 space-x-3 border-t">
                         <label for="json-file-input"
-                            class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition cursor-pointer flex items-center gap-2" title="Importar fornecedores de um arquivo JSON">
+                            class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition cursor-pointer flex items-center gap-2"
+                            title="Importar fornecedores de um arquivo JSON">
                             <ion-icon name="cloud-upload-outline"></ion-icon> Importar JSON
                         </label>
                         <input type="file" id="json-file-input" class="hidden" accept=".json">
@@ -677,8 +758,9 @@
             </div>
         </div>
     </div>
-    
-    <div id="exportModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+
+    <div id="exportModal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm">
             <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Opções de Exportação</h3>
             <form id="export-form" class="mt-4 space-y-6">
@@ -687,34 +769,42 @@
                     <fieldset class="mt-2">
                         <div class="space-y-2">
                             <div class="flex items-center">
-                                <input id="export-scope-all" name="export-scope" type="radio" value="all" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" checked>
+                                <input id="export-scope-all" name="export-scope" type="radio" value="all"
+                                    class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" checked>
                                 <label for="export-scope-all" class="ml-3 block text-sm text-gray-700">Tudo</label>
                             </div>
                             <div class="flex items-center">
-                                <input id="export-scope-selected" name="export-scope" type="radio" value="selected" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                                <label for="export-scope-selected" class="ml-3 block text-sm text-gray-700">Itens Selecionados</label>
+                                <input id="export-scope-selected" name="export-scope" type="radio" value="selected"
+                                    class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                <label for="export-scope-selected" class="ml-3 block text-sm text-gray-700">Itens
+                                    Selecionados</label>
                             </div>
                         </div>
                     </fieldset>
                 </div>
-                 <div>
+                <div>
                     <p class="text-sm font-medium text-gray-700">Tipo de arquivo</p>
                     <fieldset class="mt-2">
                         <div class="space-y-2">
                             <div class="flex items-center">
-                                <input id="export-type-json" name="export-type" type="radio" value="json" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" checked>
+                                <input id="export-type-json" name="export-type" type="radio" value="json"
+                                    class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" checked>
                                 <label for="export-type-json" class="ml-3 block text-sm text-gray-700">JSON</label>
                             </div>
                             <div class="flex items-center">
-                                <input id="export-type-excel" name="export-type" type="radio" value="excel" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                                <label for="export-type-excel" class="ml-3 block text-sm text-gray-700">Excel (XLSX)</label>
+                                <input id="export-type-excel" name="export-type" type="radio" value="excel"
+                                    class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                <label for="export-type-excel" class="ml-3 block text-sm text-gray-700">Excel
+                                    (XLSX)</label>
                             </div>
                         </div>
                     </fieldset>
                 </div>
                 <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" id="cancelExportBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
-                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">Exportar</button>
+                    <button type="button" id="cancelExportBtn"
+                        class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
+                    <button type="submit"
+                        class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">Exportar</button>
                 </div>
             </form>
         </div>
@@ -843,9 +933,11 @@
                     loginView.classList.remove('flex');
                     loginView.classList.add('hidden');
                     appView.classList.remove('hidden');
+                    addSupplierBtn.style.display = 'flex'; // Mostra o botão ao logar (padrão é a main view)
                     setupRealtimeListener();
                 } else {
                     appView.classList.add('hidden');
+                    addSupplierBtn.style.display = 'none'; // Esconde o botão na tela de login
                     loginView.classList.remove('hidden');
                     loginView.classList.add('flex');
                     if (unsubscribeSuppliers) {
@@ -933,6 +1025,12 @@
             const showCnpjViewBtn = document.getElementById('show-cnpj-view');
             const showSettingsViewBtn = document.getElementById('show-settings-view');
 
+            // Novos elementos de filtro
+            const filterColumnBtn = document.getElementById('filter-column-btn');
+            const filterColumnList = document.getElementById('filter-column-list');
+            const filterColumnText = document.getElementById('filter-column-text');
+            const clearFilterBtn = document.getElementById('clear-filter-btn');
+
             // Busca CEP
             const cepForm = document.getElementById('cep-form');
             const cepInput = document.getElementById('cepInput');
@@ -959,8 +1057,8 @@
             const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
             const confirmMessage = document.getElementById('confirmMessage');
             let deleteConfirmCallback = null;
-            
-             // Export Modal
+
+            // Export Modal
             const exportModal = document.getElementById('exportModal');
             const openExportModalBtn = document.getElementById('open-export-modal-btn');
             const cancelExportBtn = document.getElementById('cancelExportBtn');
@@ -1008,7 +1106,8 @@
             let isImportCancelled = false;
             let isImportingInBackground = false;
             let sortConfig = { key: 'dateTime', direction: 'desc' };
-            let selectAllMode = 'page'; 
+            let selectAllMode = 'page';
+            let searchColumn = 'all';
 
             // --- Lógica do Firestore ---
             function setupRealtimeListener() {
@@ -1227,7 +1326,7 @@
                 URL.revokeObjectURL(url);
                 showToast(`Exportação de ${dataToExport.length} fornecedor(es) iniciada!`, 'success');
             };
-            
+
             const exportDataAsXlsx = (dataToExport, baseFileName) => {
                 if (dataToExport.length === 0) {
                     showToast('Nenhum dado para exportar.', 'info');
@@ -1246,13 +1345,13 @@
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Fornecedores");
                 XLSX.writeFile(workbook, `${baseFileName}_${new Date().toISOString().slice(0, 10)}.xlsx`);
-                 showToast(`Exportação de ${dataToExport.length} fornecedor(es) iniciada!`, 'success');
+                showToast(`Exportação de ${dataToExport.length} fornecedor(es) iniciada!`, 'success');
             };
-            
+
             openExportModalBtn.addEventListener('click', () => {
                 document.getElementById('export-scope-selected').disabled = selectedSuppliers.size === 0;
                 if (selectedSuppliers.size === 0) {
-                     document.getElementById('export-scope-all').checked = true;
+                    document.getElementById('export-scope-all').checked = true;
                 }
                 exportModal.classList.remove('hidden');
             });
@@ -1265,7 +1364,7 @@
                 e.preventDefault();
                 const scope = exportForm.elements['export-scope'].value;
                 const type = exportForm.elements['export-type'].value;
-                
+
                 let dataToExport;
                 let baseFileName;
 
@@ -1310,11 +1409,11 @@
 
                 headerSearchContainer.classList.add('hidden'); // Oculta por padrão
                 headerBulkDeleteContainer.classList.add('hidden'); // Garante que o de deletar some
-                
-                if(viewName === 'main') {
+
+                if (viewName === 'main') {
                     updateBulkActionsUI(); // Mostra o de deletar se necessário
                 }
-                
+
                 if (viewName === 'cnpj' && cnpjSearchPerformed) {
                     headerSearchContainer.classList.remove('hidden'); // Mostra se uma busca já foi feita
                 }
@@ -1484,21 +1583,29 @@
 
             // --- Lógica de Ordenação e Filtro da Tabela ---
             function getSortedAndFilteredSuppliers() {
-                // Filtragem
                 const searchTerm = searchFilter.toLowerCase().trim();
                 let filteredSuppliers = suppliers;
 
                 if (searchTerm) {
-                    const cleanSearchTerm = searchTerm.replace(/\D/g, '');
                     filteredSuppliers = suppliers.filter(supplier => {
                         const cleanCnpj = (supplier.cnpj || '').replace(/\D/g, '');
-                        return (
-                            (supplier.code || '').toLowerCase().includes(searchTerm) ||
-                            (supplier.name || '').toLowerCase().includes(searchTerm) ||
-                            (supplier.clientCode || '').toLowerCase().includes(searchTerm) ||
-                            (supplier.observations || '').toLowerCase().includes(searchTerm) ||
-                            (cleanCnpj.includes(cleanSearchTerm) && cleanSearchTerm.length > 0)
-                        );
+                        const cleanSearchTerm = searchTerm.replace(/\D/g, '');
+
+                        if (searchColumn === 'all') {
+                            return (
+                                (supplier.code || '').toLowerCase().includes(searchTerm) ||
+                                (supplier.name || '').toLowerCase().includes(searchTerm) ||
+                                (supplier.clientCode || '').toLowerCase().includes(searchTerm) ||
+                                (supplier.observations || '').toLowerCase().includes(searchTerm) ||
+                                (cleanCnpj.includes(cleanSearchTerm) && cleanSearchTerm.length > 0)
+                            );
+                        } else {
+                            const columnValue = supplier[searchColumn] || '';
+                            if (searchColumn === 'cnpj') {
+                                return columnValue.replace(/\D/g, '').includes(cleanSearchTerm);
+                            }
+                            return String(columnValue).toLowerCase().includes(searchTerm);
+                        }
                     });
                 }
 
@@ -1626,6 +1733,70 @@
                 }, 10);
             }
 
+            // --- Lógica do Dropdown de Filtro ---
+            function toggleFilterDropdown(show) {
+                if (show) {
+                    filterColumnList.classList.remove('hidden');
+                    setTimeout(() => {
+                        filterColumnList.classList.remove('opacity-0', 'scale-95');
+                    }, 10);
+                } else {
+                    filterColumnList.classList.add('opacity-0', 'scale-95');
+                    setTimeout(() => {
+                        filterColumnList.classList.add('hidden');
+                    }, 200);
+                }
+            }
+
+            filterColumnBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isHidden = filterColumnList.classList.contains('hidden');
+                toggleFilterDropdown(isHidden);
+            });
+
+            window.addEventListener('click', (e) => {
+                if (!filterColumnBtn.contains(e.target)) {
+                    toggleFilterDropdown(false);
+                }
+            });
+
+            filterColumnList.addEventListener('click', (e) => {
+                if (e.target.tagName === 'LI') {
+                    const value = e.target.dataset.value;
+                    const text = e.target.textContent;
+
+                    searchColumn = value;
+                    filterColumnText.textContent = text;
+                    localStorage.setItem('searchColumnPreference', JSON.stringify({ value, text }));
+
+                    toggleFilterDropdown(false);
+                    renderTable();
+                }
+            });
+
+            clearFilterBtn.addEventListener('click', () => {
+                supplierSearchInput.value = '';
+                searchFilter = '';
+                currentPage = 1;
+                renderTable();
+                showToast('Filtro limpo.', 'info');
+            });
+
+            function loadFilterSettings() {
+                const savedPreference = localStorage.getItem('searchColumnPreference');
+                if (savedPreference) {
+                    try {
+                        const { value, text } = JSON.parse(savedPreference);
+                        searchColumn = value;
+                        filterColumnText.textContent = text;
+                    } catch (e) {
+                        searchColumn = 'all';
+                        filterColumnText.textContent = 'Todas as Colunas';
+                    }
+                }
+            }
+
+
             // --- Lógica de Paginação e Exclusão em Massa ---
             function renderPagination(totalItems) {
                 paginationControls.innerHTML = '';
@@ -1684,20 +1855,20 @@
             }
 
             function updateBulkActionsUI() {
-                if (selectedSuppliers.size > 0 && mainView.style.display !== 'none' ) {
+                if (selectedSuppliers.size > 0 && mainView.style.display !== 'none') {
                     headerBulkDeleteContainer.classList.remove('hidden');
                     bulkDeleteBtnHeader.querySelector('span').textContent = `Excluir ${selectedSuppliers.size}`;
                 } else {
                     headerBulkDeleteContainer.classList.add('hidden');
                 }
             }
-            
+
             function updateSelectAllCheckboxState() {
                 const processedSuppliers = getSortedAndFilteredSuppliers();
                 const start = (currentPage - 1) * ROWS_PER_PAGE;
                 const end = start + ROWS_PER_PAGE;
                 const paginatedSuppliers = processedSuppliers.slice(start, end);
-                
+
                 if (selectAllMode === 'all') {
                     const allFilteredCount = processedSuppliers.length;
                     const allFilteredAreSelected = allFilteredCount > 0 && processedSuppliers.every(s => selectedSuppliers.has(s.id));
@@ -1708,7 +1879,7 @@
                     selectAllCheckbox.checked = totalOnPage > 0 && totalOnPage === selectedOnPage;
                 }
             }
-            
+
             selectAllCheckbox.addEventListener('change', (e) => {
                 const isChecked = e.target.checked;
                 if (selectAllMode === 'all') {
@@ -1729,7 +1900,7 @@
                         }
                     });
                 }
-                renderTable(); 
+                renderTable();
             });
 
             supplierTableBody.addEventListener('change', (e) => {
@@ -1759,7 +1930,7 @@
                 confirmDeleteModal.classList.add('hidden');
                 deleteConfirmCallback = null;
             });
-            
+
             bulkDeleteBtnHeader.addEventListener('click', () => {
                 if (selectedSuppliers.size === 0) return;
 
@@ -1829,11 +2000,11 @@
                     showToast('Seleção alterada para "Todos os Itens"', 'info');
                 }
             });
-            
+
             rowsPerPageSelect.addEventListener('change', () => {
                 ROWS_PER_PAGE = parseInt(rowsPerPageSelect.value, 10);
                 localStorage.setItem('rowsPerPage', ROWS_PER_PAGE);
-                currentPage = 1; 
+                currentPage = 1;
                 renderTable();
                 showToast(`Exibindo ${ROWS_PER_PAGE} linhas por página.`, 'info');
             });
@@ -2024,7 +2195,7 @@
                     showToast('CNPJ inválido. Deve conter 14 dígitos.', 'error');
                     return;
                 }
-                
+
                 cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center text-gray-500 h-full"><p>Buscando...</p></div>`;
                 try {
                     const response = await fetch(`${corsProxy}https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
@@ -2033,7 +2204,7 @@
                         throw { status: response.status, data: errorData };
                     }
                     const data = await response.json();
-                    
+
                     cnpjSearchPerformed = true;
                     cnpjSearchContainer.classList.add('hidden');
                     headerSearchContainer.classList.remove('hidden');
@@ -2174,8 +2345,8 @@
                         cepInput.focus();
                     }, 50);
                 }
-                
-                 if (e.ctrlKey && e.key.toLowerCase() === 'a') {
+
+                if (e.ctrlKey && e.key.toLowerCase() === 'a') {
                     shortcut_triggered = true;
                     switchView('cep');
                     setTimeout(() => {
@@ -2187,13 +2358,13 @@
                 if (e.ctrlKey && e.key.toLowerCase() === 'd') {
                     shortcut_triggered = true;
                     if (views.cnpj.element.classList.contains('hidden')) {
-                         switchView('cnpj');
+                        switchView('cnpj');
                     }
-                   
+
                     if (cnpjSearchPerformed) {
                         newCnpjSearchBtn.click();
                     } else {
-                         setTimeout(() => viewCnpjInput.focus(), 50);
+                        setTimeout(() => viewCnpjInput.focus(), 50);
                     }
                 }
 
@@ -2388,6 +2559,7 @@
 
             // Inicialização da parte principal da aplicação
             loadSettings();
+            loadFilterSettings();
             renderTable();
         });
 
@@ -2395,4 +2567,3 @@
 </body>
 
 </html>
-

@@ -75,9 +75,8 @@
         .modal {
             transition: opacity 0.3s ease-out;
         }
-
-        .modal>div>div {
-            /* Target the inner div for transform animation */
+        
+        #supplierModal .modal>div>div {
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
         }
 
@@ -85,8 +84,12 @@
             animation: fadeIn 0.3s ease-out forwards;
         }
 
-        .modal[aria-hidden="false"]>div {
+        #supplierModal .modal[aria-hidden="false"]>div {
             animation: slideIn 0.4s ease-out forwards;
+        }
+
+        #infoModal .transform {
+             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
         }
 
         .copy-btn {
@@ -615,7 +618,13 @@
 
     <div id="supplierModal" aria-hidden="true"
         class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl max-h-screen overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl max-h-screen overflow-y-auto relative" id="supplierModalContainer">
+            <!-- NOVO: Dropzone Overlay -->
+            <div id="drop-zone-overlay" class="absolute inset-0 bg-indigo-500 bg-opacity-75 flex-col items-center justify-center text-white text-2xl font-bold rounded-lg z-10 hidden">
+                <ion-icon name="cloud-upload-outline" class="text-6xl mb-4"></ion-icon>
+                <p>Solte o arquivo JSON para importar</p>
+            </div>
+
             <div class="flex justify-between items-center mb-6">
                 <h2 id="modal-title" class="text-2xl font-bold text-gray-800">Cadastrar Novo Fornecedor</h2>
                 <button id="closeModalBtn" class="text-gray-500 hover:text-gray-800">
@@ -681,7 +690,7 @@
                             title="Importar fornecedores de um arquivo JSON">
                             <ion-icon name="cloud-upload-outline"></ion-icon> Importar JSON
                         </label>
-                        <input type="file" id="json-file-input" class="hidden" accept=".json">
+                        <input type="file" id="json-file-input" class="hidden" accept=".json,application/json">
 
                         <button type="button" id="cancelBtn"
                             class="bg-gray-200 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-300 transition">Cancelar</button>
@@ -838,24 +847,22 @@
         </div>
     </div>
 
-    <!-- NOVO: Modal de Informações do Fornecedor -->
-    <div id="infoModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-lg">
-            <div class="flex justify-between items-center mb-4 border-b pb-3">
-                <h3 class="text-xl font-bold text-gray-800">Detalhes do Fornecedor</h3>
-                <button id="closeInfoModalBtn" class="text-gray-500 hover:text-gray-800">
-                    <ion-icon name="close-outline" class="text-3xl"></ion-icon>
-                </button>
+    <!-- REESTILIZADO: Modal de Informações do Fornecedor -->
+    <div id="infoModal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-gray-50 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform transition-all duration-300 scale-95 opacity-0">
+            <div id="infoModalHeader" class="p-5 border-b border-gray-200 flex justify-between items-start">
+                <!-- Header content injetado via JS -->
             </div>
-            <div id="infoModalContent" class="mt-4 space-y-3 text-sm">
-                <!-- Conteúdo injetado via JS -->
+            <div id="infoModalContent" class="p-6 space-y-1 overflow-y-auto">
+                <!-- Content injetado via JS -->
             </div>
-            <div class="mt-6 flex justify-end">
+            <div class="p-4 bg-gray-100 border-t border-gray-200 flex justify-end rounded-b-xl mt-auto">
                 <button id="okInfoModalBtn"
-                    class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition">OK</button>
+                    class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Fechar</button>
             </div>
         </div>
     </div>
+
 
     <script type="module">
         // UPDATED: Using a newer version of Firebase SDK (v10.12.2)
@@ -1072,11 +1079,11 @@
             const confirmImportBtn = document.getElementById('confirmImportBtn');
             let importDataCache = null;
 
-            // NOVO: Modal de Informações
+            // Modal de Informações
             const infoModal = document.getElementById('infoModal');
-            const closeInfoModalBtn = document.getElementById('closeInfoModalBtn');
             const okInfoModalBtn = document.getElementById('okInfoModalBtn');
             const infoModalContent = document.getElementById('infoModalContent');
+            const infoModalHeader = document.getElementById('infoModalHeader');
 
             // Configurações
             const userEmailEl = document.getElementById('user-email');
@@ -1126,6 +1133,48 @@
             const cancelImportBtn = document.getElementById('cancel-import-btn');
             const runInBackgroundBtn = document.getElementById('run-in-background-btn');
             const backgroundImportStatus = document.getElementById('background-import-status');
+            
+            // NOVO: Drag and Drop
+            const supplierModalContainer = document.getElementById('supplierModalContainer');
+            const dropZoneOverlay = document.getElementById('drop-zone-overlay');
+
+            supplierModalContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZoneOverlay.classList.remove('hidden');
+                dropZoneOverlay.classList.add('flex');
+            });
+
+            supplierModalContainer.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.relatedTarget === null || !supplierModalContainer.contains(e.relatedTarget)) {
+                    dropZoneOverlay.classList.add('hidden');
+                    dropZoneOverlay.classList.remove('flex');
+                }
+            });
+
+            supplierModalContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZoneOverlay.classList.add('hidden');
+                dropZoneOverlay.classList.remove('flex');
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const jsonFile = Array.from(files).find(file => file.type === 'application/json' || file.name.endsWith('.json'));
+                    if (jsonFile) {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(jsonFile);
+                        jsonFileInput.files = dataTransfer.files;
+                        const event = new Event('change', { bubbles: true });
+                        jsonFileInput.dispatchEvent(event);
+                    } else {
+                        showToast('Por favor, solte um arquivo .json válido.', 'error');
+                    }
+                }
+            });
+
 
             closeImportReportBtn.addEventListener('click', () => importReportModal.classList.add('hidden'));
             okImportReportBtn.addEventListener('click', () => importReportModal.classList.add('hidden'));
@@ -2016,9 +2065,16 @@
                 }
             });
 
-            // --- NOVO: Lógica do Modal de Informações ---
-            closeInfoModalBtn.addEventListener('click', () => infoModal.classList.add('hidden'));
-            okInfoModalBtn.addEventListener('click', () => infoModal.classList.add('hidden'));
+            // --- Lógica do Modal de Informações ---
+            const closeInfoModal = () => {
+                const modal = document.getElementById('infoModal');
+                modal.querySelector('.transform').classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            };
+
+            okInfoModalBtn.addEventListener('click', closeInfoModal);
 
             window.showInfoModal = (supplierId) => {
                 const supplier = suppliers.find(s => s.id === supplierId);
@@ -2027,30 +2083,59 @@
                     return;
                 }
 
-                infoModalContent.innerHTML = `
-                    <div class="grid grid-cols-3 gap-x-4 gap-y-2">
-                        <p class="font-semibold text-gray-600 col-span-1">Cód. Fornecedor:</p>
-                        <p class="text-gray-800 col-span-2">${supplier.code || 'N/A'}</p>
+                const displayData = (value, emptyText = "Vazio") => {
+                    return (value !== null && value !== undefined && value !== '') ? value : `<span class="text-gray-400 italic">${emptyText}</span>`;
+                };
 
-                        <p class="font-semibold text-gray-600 col-span-1">CNPJ:</p>
-                        <p class="text-gray-800 col-span-2">${supplier.cnpj || 'N/A'}</p>
+                const createInfoFieldWithValue = (icon, label, rawValue, formattedValue) => {
+                    const hasValue = rawValue !== null && rawValue !== undefined && rawValue !== '';
+                    const sanitizedRawValue = String(rawValue || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-                        <p class="font-semibold text-gray-600 col-span-1">Nome:</p>
-                        <p class="text-gray-800 col-span-2">${supplier.name || 'N/A'}</p>
-
-                        <p class="font-semibold text-gray-600 col-span-1">Cód. Cliente:</p>
-                        <p class="text-gray-800 col-span-2">${supplier.clientCode || 'N/A'}</p>
-                        
-                        <p class="font-semibold text-gray-600 col-span-1">Data de Cadastro:</p>
-                        <p class="text-gray-800 col-span-2">${formatSupplierDate(supplier.dateTime)}</p>
-
-                        <p class="font-semibold text-gray-600 col-span-1">Observações:</p>
-                        <p class="text-gray-800 col-span-2 break-words">${supplier.observations || 'N/A'}</p>
+                    return `
+                        <div class="flex items-start group py-3 border-b border-gray-200 last:border-b-0">
+                            <div class="flex-shrink-0 w-10 text-center">
+                                <div class="bg-indigo-100 text-indigo-600 rounded-lg h-10 w-10 flex items-center justify-center">
+                                    <ion-icon name="${icon}" class="text-xl"></ion-icon>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-grow">
+                                <p class="text-sm font-medium text-gray-500">${label}</p>
+                                <div class="text-gray-800 break-words">${formattedValue}</div>
+                            </div>
+                            ${hasValue ? `
+                            <button onclick="copyToClipboardModal('${sanitizedRawValue}')" class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-indigo-600 p-2 -mr-2 self-center" title="Copiar ${label}">
+                                <ion-icon name="copy-outline" class="text-lg"></ion-icon>
+                            </button>
+                            ` : ''}
+                        </div>
+                    `;
+                };
+                
+                infoModalHeader.innerHTML = `
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">${displayData(supplier.name, "Nome não informado")}</h3>
+                        <p class="text-sm text-gray-500">${displayData(supplier.cnpj, "CNPJ não informado")}</p>
                     </div>
+                    <button id="closeInfoModalBtnInternal" class="text-gray-400 hover:text-gray-600 p-1 rounded-full">
+                        <ion-icon name="close-outline" class="text-2xl"></ion-icon>
+                    </button>
                 `;
-                infoModal.classList.remove('hidden');
+                
+                infoModalContent.innerHTML = `
+                    ${createInfoFieldWithValue('barcode-outline', 'Cód. Fornecedor', supplier.code, displayData(supplier.code))}
+                    ${createInfoFieldWithValue('card-outline', 'Cód. Cliente', supplier.clientCode, displayData(supplier.clientCode))}
+                    ${createInfoFieldWithValue('calendar-outline', 'Data de Cadastro', supplier.dateTime, supplier.dateTime ? formatSupplierDate(supplier.dateTime) : displayData(null, 'Não registrada'))}
+                    ${createInfoFieldWithValue('chatbubble-ellipses-outline', 'Observações', supplier.observations, displayData(supplier.observations))}
+                `;
+                
+                const modal = document.getElementById('infoModal');
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.querySelector('.transform').classList.remove('scale-95', 'opacity-0');
+                }, 10);
+                
+                modal.querySelector('#closeInfoModalBtnInternal').addEventListener('click', closeInfoModal);
             };
-
 
             // --- Tratamento de Erros de API ---
             function handleApiError(error, context) {
@@ -2506,6 +2591,7 @@
                 return phone;
             }
 
+            // ATUALIZADO: Função de cópia da tabela para manter o foco no filtro
             function copyToClipboard(text) {
                 if (!text) return;
                 const textarea = document.createElement('textarea');
@@ -2519,11 +2605,33 @@
                     showToast('Falha ao copiar texto.', 'error');
                 }
                 document.body.removeChild(textarea);
+                const searchInput = document.getElementById('supplier-search-input');
+                if(searchInput) {
+                    searchInput.focus();
+                }
             }
+            
+            // NOVO: Função de cópia específica para modais, para não alterar o foco
+            function copyToClipboardModal(text) {
+                if (!text) return;
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('Copiado para a área de transferência!', 'success');
+                } catch (err) {
+                    showToast('Falha ao copiar texto.', 'error');
+                }
+                document.body.removeChild(textarea);
+            }
+            window.copyToClipboardModal = copyToClipboardModal;
+
 
             document.body.addEventListener('click', (e) => {
                 const copyBtn = e.target.closest('.copy-btn');
-                if (copyBtn) {
+                if (copyBtn && !e.target.closest('#infoModal')) { // Não usar a função global de cópia para o modal de info
                     copyToClipboard(copyBtn.dataset.text);
                 }
             });
@@ -2569,4 +2677,3 @@
 </body>
 
 </html>
-

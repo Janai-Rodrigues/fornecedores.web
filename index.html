@@ -7,7 +7,7 @@
     <title>SGF</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -328,10 +328,12 @@
                 <div class="flex items-center space-x-4">
                     <div id="header-search-container" class="w-full max-w-xs hidden">
                         <button id="new-cnpj-search-btn"
-                            class="w-full bg-indigo-600 text-white px-4 py-2 text-sm rounded-md hover:bg-indigo-700 flex items-center justify-center space-x-2"
+                            class="w-full bg-indigo-600 text-white px-4 py-2 text-sm rounded-md hover:bg-indigo-700"
                             title="Realizar uma nova busca de CNPJ (CTRL+D)">
-                            <ion-icon name="search-outline"></ion-icon>
-                            <span>Nova Busca (CTRL+D)</span>
+                            <div class="flex items-center justify-center space-x-2 pointer-events-none">
+                                <ion-icon name="search-outline"></ion-icon>
+                                <span>Nova Busca (CTRL+D)</span>
+                            </div>
                         </button>
                     </div>
                     <div id="header-bulk-delete-container" class="hidden">
@@ -2252,7 +2254,8 @@
             });
 
             // --- Lógica de Busca de CNPJ ---
-            newCnpjSearchBtn.addEventListener('click', () => {
+            newCnpjSearchBtn.addEventListener('click', (e) => {
+                e.preventDefault();
                 cnpjSearchContainer.classList.remove('hidden');
                 headerSearchContainer.classList.add('hidden');
                 cnpjResultDiv.innerHTML = '';
@@ -2359,7 +2362,8 @@
                                     <div class="bg-white p-6 rounded-xl shadow-sm">
                                         <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Endereço</h4>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 text-sm">
-                                            ${createStyledField('location-outline', 'Logradouro', `${data.logradouro}, ${data.numero}`)}
+                                            ${createStyledField('location-outline', 'Logradouro', `${(data.descricao_tipo_de_logradouro ? data.descricao_tipo_de_logradouro + ' ' : '')}${data.logradouro}`)}
+                                            ${createStyledField('list-outline', 'Número', data.numero)}
                                             ${createStyledField('cube-outline', 'Complemento', data.complemento)}
                                             ${createStyledField('map-outline', 'Bairro', data.bairro)}
                                             ${createStyledField('trail-sign-outline', 'Município / UF', `${data.municipio} / ${data.uf}`)}
@@ -2496,8 +2500,8 @@
                      <div class="bg-white p-6 rounded-xl shadow-sm">
                         <div class="flex justify-between items-center pb-4 border-b">
                            <div>
-                                <h3 class="text-xl font-bold text-gray-800 uppercase">${data.logradouro}</h3>
-                                <p class="text-sm text-gray-500 uppercase">${data.bairro}, ${data.localidade} - ${data.uf}</p>
+                                <h3 class="text-xl font-bold text-gray-800 uppercase">${data.logradouro || 'Rua não informada'}</h3>
+                                <p class="text-sm text-gray-500 uppercase">${data.bairro || 'Bairro não informado'}, ${data.localidade} - ${data.uf}</p>
                            </div>
                            <a href="${mapsUrl}" target="_blank" class="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 flex items-center space-x-2 whitespace-nowrap">
                                 <ion-icon name="map-outline"></ion-icon>
@@ -2506,8 +2510,8 @@
                         </div>
                         <div class="py-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                                ${createCopyableField('Logradouro', data.logradouro.toUpperCase())}
-                                ${createCopyableField('Bairro', data.bairro.toUpperCase())}
+                                ${createCopyableField('Logradouro', (data.logradouro || '').toUpperCase())}
+                                ${createCopyableField('Bairro', (data.bairro || '').toUpperCase())}
                                 ${createCopyableField('Cidade', data.localidade.toUpperCase())}
                                 ${createCopyableField('Estado', data.uf.toUpperCase())}
                                 ${createCopyableField('CEP', formattedCep)}
@@ -2528,14 +2532,24 @@
                 }
                 cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500"><p>Buscando...</p></div>`;
                 try {
-                    const response = await fetch(`${corsProxy}https://viacep.com.br/ws/${cleanedCep}/json/`);
-                    if (!response.ok) throw { status: response.status };
-
-                    const data = await response.json();
-                    if (data.erro) {
-                        throw { status: 404 };
+                    const response = await fetch(`${corsProxy}https://brasilapi.com.br/api/cep/v1/${cleanedCep}`);
+                    if (!response.ok) {
+                         const errorData = await response.json().catch(() => ({}));
+                         if (response.status === 404 || errorData.type === 'cep_not_found') {
+                             throw { status: 404 };
+                         }
+                         throw { status: response.status };
                     }
-                    renderViaCepResult(data);
+                    const data = await response.json();
+                    const adaptedData = {
+                        logradouro: data.street,
+                        bairro: data.neighborhood,
+                        localidade: data.city,
+                        uf: data.state,
+                        cep: data.cep,
+                        ibge: null 
+                    };
+                    renderViaCepResult(adaptedData);
                 } catch (error) {
                     handleApiError(error, 'Busca por CEP');
                     cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>Falha ao buscar CEP. Verifique o número e tente novamente.</p></div>`;
@@ -2677,3 +2691,4 @@
 </body>
 
 </html>
+

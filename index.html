@@ -1483,11 +1483,19 @@
             });
 
             // --- Lógica do Modal de Fornecedor ---
-            window.openModal = (supplierId = null) => {
+            window.openModal = (supplierId = null, prefill = {}) => {
                 supplierForm.reset();
+
                 modalTitle.textContent = "Cadastrar Novo Fornecedor";
                 modalContent.classList.remove('hidden');
                 importLoader.classList.add('hidden');
+
+                // Reset fields to their default state before applying prefill or edit data
+                editSupplierIdInput.value = '';
+                nameInput.readOnly = true;
+                nameInput.classList.add('bg-gray-100');
+                document.querySelector('#supplierModal button[type="submit"]').textContent = 'Salvar Fornecedor';
+
                 if (supplierId) {
                     const supplier = suppliers.find(s => s.id === supplierId);
                     if (!supplier) return;
@@ -1501,15 +1509,19 @@
                     document.getElementById('observations').value = supplier.observations || '';
                     nameInput.readOnly = false;
                     nameInput.classList.remove('bg-gray-100');
-                } else {
-                    modalTitle.textContent = 'Cadastrar Novo Fornecedor';
-                    document.querySelector('#supplierModal button[type="submit"]').textContent = 'Salvar Fornecedor';
-                    editSupplierIdInput.value = '';
-                    nameInput.readOnly = true;
-                    nameInput.classList.add('bg-gray-100');
+                } else if (prefill.cnpj || prefill.name) { // Handle prefill for new suppliers
+                    document.getElementById('supplierCnpj').value = prefill.cnpj || '';
+                    document.getElementById('supplierName').value = prefill.name || '';
+                    // If name is pre-filled, it means it came from a reliable source (CNPJ API), so we can allow editing.
+                    if (prefill.name) {
+                        nameInput.readOnly = false;
+                        nameInput.classList.remove('bg-gray-100');
+                    }
                 }
+
                 supplierModal.classList.remove('hidden');
                 supplierModal.setAttribute('aria-hidden', 'false');
+                document.getElementById('supplierCode').focus();
             };
 
             const closeModal = () => {
@@ -2337,10 +2349,16 @@
                                         </div>
                                         <p class="text-sm text-gray-500 pl-9">${data.nome_fantasia || 'Sem nome fantasia'}</p>
                                    </div>
-                                   <a href="${cnpjaUrl}" target="_blank" class="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 flex items-center space-x-2 whitespace-nowrap">
-                                        <ion-icon name="open-outline"></ion-icon>
-                                        <span>Consulta Completa</span>
-                                   </a>
+                                    <div class="flex items-center space-x-2">
+                                        <button id="register-as-supplier-btn" class="bg-green-600 text-white px-4 py-2 text-sm rounded-md hover:bg-green-700 flex items-center space-x-2 whitespace-nowrap">
+                                            <ion-icon name="person-add-outline"></ion-icon>
+                                            <span>Cadastrar como fornecedor</span>
+                                        </button>
+                                        <a href="${cnpjaUrl}" target="_blank" class="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 flex items-center space-x-2 whitespace-nowrap">
+                                                <ion-icon name="open-outline"></ion-icon>
+                                                <span>Consulta Completa</span>
+                                        </a>
+                                    </div>
                                </div>
                             </div>
 
@@ -2394,6 +2412,14 @@
                                 </div>
                             </div>
                         </div>`;
+
+                    document.getElementById('register-as-supplier-btn').addEventListener('click', () => {
+                        const cnpjToPrefill = formatCnpj(data.cnpj);
+                        const nameToPrefill = data.razao_social;
+                        switchView('main');
+                        openModal(null, { cnpj: cnpjToPrefill, name: nameToPrefill });
+                    });
+
                 } catch (error) {
                     handleApiError(error, 'Busca de CNPJ');
                     cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>Falha ao buscar CNPJ. Verifique o número e tente novamente.</p></div>`;
@@ -2691,4 +2717,3 @@
 </body>
 
 </html>
-

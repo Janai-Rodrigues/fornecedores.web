@@ -197,6 +197,27 @@
         #filter-column-dropdown ul {
             transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
+
+        /* NOVO: Estilos do Loader de Conteúdo */
+        .content-loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 2rem;
+            min-height: 200px;
+        }
+        .content-loader svg {
+            animation: spin 1s linear infinite;
+            width: 2.5rem;
+            height: 2.5rem;
+            color: var(--primary-color);
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 
@@ -893,6 +914,19 @@
 
             // --- Proxy para contornar problemas de CORS (usando um novo proxy) ---
             const corsProxy = 'https://api.codetabs.com/v1/proxy/?quest=';
+            
+            // --- Função para Gerar HTML do Loader Animado ---
+            const createContentLoader = (text) => {
+                return `
+                    <div class="content-loader text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="mt-4 text-sm font-medium">${text}</p>
+                    </div>
+                `;
+            };
 
             // --- Função de Notificação (Toast) ---
             const showToast = (message, type = 'error') => {
@@ -1136,7 +1170,6 @@
             const runInBackgroundBtn = document.getElementById('run-in-background-btn');
             const backgroundImportStatus = document.getElementById('background-import-status');
             
-            // NOVO: Drag and Drop
             const supplierModalContainer = document.getElementById('supplierModalContainer');
             const dropZoneOverlay = document.getElementById('drop-zone-overlay');
 
@@ -1448,19 +1481,27 @@
                 headerTitle.textContent = selectedView.title;
                 addSupplierBtn.style.display = viewName === 'main' ? 'flex' : 'none';
 
-                headerSearchContainer.classList.add('hidden'); // Oculta por padrão
-                headerBulkDeleteContainer.classList.add('hidden'); // Garante que o de deletar some
+                headerSearchContainer.classList.add('hidden');
+                headerBulkDeleteContainer.classList.add('hidden');
 
                 if (viewName === 'main') {
-                    updateBulkActionsUI(); // Mostra o de deletar se necessário
-                    setTimeout(() => supplierSearchInput.focus(), 50); // Foca no filtro ao voltar para a tabela
-                }
-
-                if (viewName === 'cnpj' && cnpjSearchPerformed) {
-                    headerSearchContainer.classList.remove('hidden'); // Mostra se uma busca já foi feita
-                }
-
-                if (viewName === 'settings') {
+                    updateBulkActionsUI();
+                    setTimeout(() => supplierSearchInput.focus(), 50);
+                } else if (viewName === 'cep') {
+                    setTimeout(() => {
+                        if (cepForm.classList.contains('hidden')) {
+                            ufInput.focus();
+                        } else {
+                            cepInput.focus();
+                        }
+                    }, 50);
+                } else if (viewName === 'cnpj') {
+                    if (cnpjSearchPerformed) {
+                        headerSearchContainer.classList.remove('hidden');
+                    } else {
+                         setTimeout(() => viewCnpjInput.focus(), 50);
+                    }
+                } else if (viewName === 'settings') {
                     userEmailEl.textContent = auth.currentUser?.email || 'N/A';
                 }
             }
@@ -1490,7 +1531,6 @@
                 modalContent.classList.remove('hidden');
                 importLoader.classList.add('hidden');
 
-                // Reset fields to their default state before applying prefill or edit data
                 editSupplierIdInput.value = '';
                 nameInput.readOnly = true;
                 nameInput.classList.add('bg-gray-100');
@@ -1509,10 +1549,9 @@
                     document.getElementById('observations').value = supplier.observations || '';
                     nameInput.readOnly = false;
                     nameInput.classList.remove('bg-gray-100');
-                } else if (prefill.cnpj || prefill.name) { // Handle prefill for new suppliers
+                } else if (prefill.cnpj || prefill.name) {
                     document.getElementById('supplierCnpj').value = prefill.cnpj || '';
                     document.getElementById('supplierName').value = prefill.name || '';
-                    // If name is pre-filled, it means it came from a reliable source (CNPJ API), so we can allow editing.
                     if (prefill.name) {
                         nameInput.readOnly = false;
                         nameInput.classList.remove('bg-gray-100');
@@ -2106,7 +2145,7 @@
                     const sanitizedRawValue = String(rawValue || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
                     return `
-                        <div class="flex items-start group py-3 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-start py-3 border-b border-gray-200 last:border-b-0">
                             <div class="flex-shrink-0 w-10 text-center">
                                 <div class="bg-indigo-100 text-indigo-600 rounded-lg h-10 w-10 flex items-center justify-center">
                                     <ion-icon name="${icon}" class="text-xl"></ion-icon>
@@ -2117,7 +2156,7 @@
                                 <div class="text-gray-800 break-words">${formattedValue}</div>
                             </div>
                             ${hasValue ? `
-                            <button onclick="copyToClipboardModal('${sanitizedRawValue}')" class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-indigo-600 p-2 -mr-2 self-center" title="Copiar ${label}">
+                            <button onclick="copyToClipboardModal('${sanitizedRawValue}')" class="transition-colors text-gray-400 hover:text-indigo-600 p-2 -mr-2 self-center" title="Copiar ${label}">
                                 <ion-icon name="copy-outline" class="text-lg"></ion-icon>
                             </button>
                             ` : ''}
@@ -2156,9 +2195,9 @@
                 console.error(`Erro em ${context}:`, error);
                 let message = `Ocorreu um erro inesperado em '${context}'.`;
 
-                if (error instanceof TypeError) { // Erro de rede
+                if (error instanceof TypeError) {
                     message = "Falha na conexão. Verifique sua internet.";
-                } else if (error && error.status) { // Erro de HTTP
+                } else if (error && error.status) {
                     switch (error.status) {
                         case 400:
                             message = `Requisição inválida para ${context}. Verifique os dados enviados.`;
@@ -2184,6 +2223,7 @@
                 tabByCep.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
                 addressForm.classList.add('hidden');
                 cepForm.classList.remove('hidden');
+                cepInput.focus();
             });
 
             tabByAddress.addEventListener('click', () => {
@@ -2193,6 +2233,7 @@
                 tabByAddress.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
                 cepForm.classList.add('hidden');
                 addressForm.classList.remove('hidden');
+                ufInput.focus();
             });
 
             cepInput.addEventListener('input', (e) => {
@@ -2208,7 +2249,7 @@
 
             addressForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500"><p>Buscando...</p></div>`;
+                cepResultDiv.innerHTML = createContentLoader('Buscando endereço...');
 
                 const uf = ufInput.value.trim();
                 const city = cityInput.value.trim();
@@ -2288,7 +2329,7 @@
                     return;
                 }
 
-                cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center text-gray-500 h-full"><p>Buscando...</p></div>`;
+                cnpjResultDiv.innerHTML = createContentLoader('Consultando CNPJ...');
                 try {
                     const response = await fetch(`${corsProxy}https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
                     if (!response.ok) {
@@ -2431,7 +2472,6 @@
 
 
             document.addEventListener('keydown', (e) => {
-                // Se a view do app principal não estiver visível (ou seja, na tela de login), não faz nada.
                 if (appView.classList.contains('hidden')) {
                     return;
                 }
@@ -2519,35 +2559,52 @@
 
             function renderViaCepResult(data) {
                 const formattedCep = data.cep.replace(/(\d{5})(\d{3})/, '$1-$2');
-                const fullAddress = `${data.logradouro} - ${data.bairro}, ${data.localidade} - ${data.uf}, ${formattedCep}`;
-                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+                const logradouro = data.logradouro || 'Endereço não informado';
+                const bairro = data.bairro || 'Bairro não informado';
+                const cidade = data.localidade || 'Cidade não informada';
+                const estado = data.uf || 'UF';
+                
+                const fullAddressForQuery = `${logradouro}, ${bairro}, ${cidade} - ${estado}, ${formattedCep}`;
+                const fullAddressForDisplay = `${logradouro} - ${bairro}, ${cidade} - ${estado}, ${formattedCep}`;
+
+                const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(fullAddressForQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
 
                 cepResultDiv.innerHTML = `
-                     <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <div class="flex justify-between items-center pb-4 border-b">
-                           <div>
-                                <h3 class="text-xl font-bold text-gray-800 uppercase">${data.logradouro || 'Rua não informada'}</h3>
-                                <p class="text-sm text-gray-500 uppercase">${data.bairro || 'Bairro não informado'}, ${data.localidade} - ${data.uf}</p>
-                           </div>
-                           <a href="${mapsUrl}" target="_blank" class="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 flex items-center space-x-2 whitespace-nowrap">
-                                <ion-icon name="map-outline"></ion-icon>
-                                <span>Ver no Mapa</span>
-                           </a>
+                <div class="bg-white rounded-xl shadow-sm flex flex-col md:flex-row overflow-hidden">
+                    <div class="flex-1 p-6">
+                        <div class="pb-4 border-b">
+                            <h3 class="text-xl font-bold text-gray-800 uppercase">${logradouro}</h3>
+                            <p class="text-sm text-gray-500 uppercase">${bairro}, ${cidade} - ${estado}</p>
                         </div>
-                        <div class="py-6">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                                ${createCopyableField('Logradouro', (data.logradouro || '').toUpperCase())}
-                                ${createCopyableField('Bairro', (data.bairro || '').toUpperCase())}
-                                ${createCopyableField('Cidade', data.localidade.toUpperCase())}
-                                ${createCopyableField('Estado', data.uf.toUpperCase())}
-                                ${createCopyableField('CEP', formattedCep)}
-                                ${createCopyableField('IBGE', data.ibge)}
-                            </div>
-                             <div class="mt-4 pt-4 border-t">
-                                ${createStyledField('navigate-outline', 'Endereço Completo', fullAddress.toUpperCase())}
-                            </div>
+                        <div class="py-6 space-y-3">
+                            ${createCopyableField('Logradouro', logradouro.toUpperCase())}
+                            ${createCopyableField('Bairro', bairro.toUpperCase())}
+                            ${createCopyableField('Cidade', cidade.toUpperCase())}
+                            ${createCopyableField('Estado', estado.toUpperCase())}
+                            ${createCopyableField('CEP', formattedCep)}
+                            ${createCopyableField('IBGE', data.ibge)}
                         </div>
-                    </div>`;
+                        <div class="pt-4 border-t">
+                            ${createStyledField('navigate-outline', 'Endereço Completo', fullAddressForDisplay.toUpperCase())}
+                        </div>
+                    </div>
+
+                    <div class="w-full md:w-2/5 h-80 md:h-auto min-h-[300px] relative bg-gray-200">
+                        <div id="map-loader" class="absolute inset-0 flex items-center justify-center">
+                            ${createContentLoader('Carregando mapa...')}
+                        </div>
+                        <iframe id="gmap_canvas" src="${mapUrl}" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" class="w-full h-full opacity-0 transition-opacity duration-500"></iframe>
+                    </div>
+                </div>`;
+                
+                const gmapFrame = document.getElementById('gmap_canvas');
+                const mapLoader = document.getElementById('map-loader');
+                if (gmapFrame) {
+                    gmapFrame.onload = () => {
+                        if(mapLoader) mapLoader.style.display = 'none';
+                        gmapFrame.classList.remove('opacity-0');
+                    };
+                }
             }
 
             async function searchByCep(cep) {
@@ -2556,7 +2613,7 @@
                     showToast('CEP inválido. Deve conter 8 dígitos.', 'error');
                     return;
                 }
-                cepResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500"><p>Buscando...</p></div>`;
+                cepResultDiv.innerHTML = createContentLoader('Buscando CEP...');
                 try {
                     const response = await fetch(`${corsProxy}https://brasilapi.com.br/api/cep/v1/${cleanedCep}`);
                     if (!response.ok) {
@@ -2631,7 +2688,6 @@
                 return phone;
             }
 
-            // ATUALIZADO: Função de cópia da tabela para manter o foco no filtro
             function copyToClipboard(text) {
                 if (!text) return;
                 const textarea = document.createElement('textarea');
@@ -2651,7 +2707,6 @@
                 }
             }
             
-            // NOVO: Função de cópia específica para modais, para não alterar o foco
             function copyToClipboardModal(text) {
                 if (!text) return;
                 const textarea = document.createElement('textarea');
@@ -2671,7 +2726,7 @@
 
             document.body.addEventListener('click', (e) => {
                 const copyBtn = e.target.closest('.copy-btn');
-                if (copyBtn && !e.target.closest('#infoModal')) { // Não usar a função global de cópia para o modal de info
+                if (copyBtn && !e.target.closest('#infoModal')) {
                     copyToClipboard(copyBtn.dataset.text);
                 }
             });
@@ -2681,14 +2736,14 @@
                 const labelHtml = showLabel ? `<p class="font-medium text-gray-500">${label}</p>` : '';
                 return `
                     <div class="flex items-start gap-3">
-                        <ion-icon name="${icon}" class="text-lg text-gray-400 mt-0.5"></ion-icon>
+                        <ion-icon name="${icon}" class="text-lg text-gray-400 mt-0.5 flex-shrink-0"></ion-icon>
                         <div class="flex-1">
                             ${labelHtml}
-                            <p class="text-gray-800">${cleanValue}</p>
+                            <p class="text-gray-800 inline">${cleanValue}</p>
+                            <button class="copy-btn ml-1.5 transition-colors inline-flex items-center" data-text="${cleanValue}" title="Copiar ${label}">
+                                <ion-icon name="copy-outline" class="text-lg"></ion-icon>
+                            </button>
                         </div>
-                        <button class="copy-btn" data-text="${cleanValue}" title="Copiar ${label}">
-                            <ion-icon name="copy-outline" class="text-lg"></ion-icon>
-                        </button>
                     </div>`;
             }
 
@@ -2696,12 +2751,12 @@
                 const cleanValue = value || 'Não informado';
                 const labelHtml = showLabel ? `<span class="font-medium text-gray-600">${label}:</span>` : '';
                 return `
-                    <div class="flex justify-between items-center">
-                        <div>
+                    <div class="flex items-center">
+                        <p>
                             ${labelHtml}
                             <span class="text-gray-800 ml-2">${cleanValue}</span>
-                        </div>
-                        <button class="copy-btn" data-text="${cleanValue}" title="Copiar ${label}">
+                        </p>
+                        <button class="copy-btn ml-2 transition-colors" data-text="${cleanValue}" title="Copiar ${label}">
                             <ion-icon name="copy-outline" class="text-lg"></ion-icon>
                         </button>
                     </div>`;
@@ -2717,3 +2772,5 @@
 </body>
 
 </html>
+
+

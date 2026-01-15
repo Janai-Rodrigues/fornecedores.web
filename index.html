@@ -225,6 +225,295 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* --- ESTILOS DO MODO ESCURO (DARK MODE) - AJUSTADO --- */
+        body.dark-mode {
+            background-color: #111827;
+            /* Gray 900 - Fundo Geral */
+            color: #f3f4f6;
+            /* Gray 100 - Texto Principal */
+        }
+
+        /* Fundos de Cards e Modais */
+        body.dark-mode .bg-white {
+            background-color: #1f2937 !important;
+            /* Gray 800 */
+            color: #e5e7eb;
+            border-color: #374151;
+            /* Bordas mais sutis */
+        }
+
+        /* Ajuste de fundos cinza claro para tons escuros */
+        body.dark-mode .bg-gray-50,
+        body.dark-mode .bg-gray-100,
+        body.dark-mode .bg-gray-200 {
+            background-color: #111827 !important;
+            color: #d1d5db;
+        }
+
+        /* --- AJUSTE 1: Tabela (Hover e Seleção) --- */
+        /* Cabeçalho da tabela */
+        body.dark-mode thead tr {
+            background-color: #0f172a !important;
+            /* Slate 900 */
+        }
+
+        /* Hover da linha inteira */
+        body.dark-mode tbody tr:hover {
+            background-color: #1f2937 !important;
+            /* Gray 800 */
+        }
+
+        /* Hover da CÉLULA individual (Correção do quadrado branco) */
+        body.dark-mode .copyable-cell:hover {
+            background-color: #374151 !important;
+            /* Gray 700 - Destaque sutil na célula */
+            color: #fff !important;
+        }
+
+        /* Linha Selecionada (Checkbox) */
+        body.dark-mode .bg-indigo-50 {
+            background-color: rgba(99, 102, 241, 0.15) !important;
+            /* Azul transparente */
+        }
+
+        /* Hover específico para linha que já está selecionada */
+        body.dark-mode tbody tr.bg-indigo-50:hover {
+            background-color: rgba(99, 102, 241, 0.25) !important;
+        }
+
+        /* Linha Selecionada (Checkbox): Substitui o branco do indigo-50 por um azul transparente */
+        body.dark-mode .bg-indigo-50 {
+            background-color: rgba(99, 102, 241, 0.15) !important;
+            /* Indigo com transparência */
+        }
+
+        /* --- AJUSTE 2: Ícones Roxos (Editar, Copiar, Links) --- */
+        /* Transforma o Roxo Escuro (Indigo 600) em Roxo Claro/Lavanda (Indigo 400) */
+        body.dark-mode .text-indigo-600 {
+            color: #818cf8 !important;
+            /* Cor "Lavanda" para leitura fácil */
+        }
+
+        /* Hover dos ícones: Fica ainda mais claro (quase branco/azul) ao passar o mouse */
+        body.dark-mode .text-indigo-600:hover,
+        body.dark-mode .hover\:text-indigo-800:hover,
+        body.dark-mode .copy-btn:hover {
+            color: #c7d2fe !important;
+            /* Indigo 200 - Brilho ao interagir */
+        }
+
+        /* Textos Secundários (Cinzas) */
+        body.dark-mode .text-gray-500,
+        body.dark-mode .text-gray-600,
+        body.dark-mode .text-gray-700,
+        body.dark-mode .text-gray-800,
+        body.dark-mode .text-gray-900 {
+            color: #9ca3af !important;
+            /* Gray 400 */
+        }
+
+        /* Títulos */
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode strong,
+        body.dark-mode .font-bold {
+            color: #f3f4f6 !important;
+        }
+
+        /* Inputs e Formulários */
+        body.dark-mode input,
+        body.dark-mode textarea,
+        body.dark-mode select {
+            background-color: #374151 !important;
+            border-color: #4b5563 !important;
+            color: #fff !important;
+        }
+
+        body.dark-mode input::placeholder {
+            color: #6b7280;
+        }
+
+        /* Bordas Gerais */
+        body.dark-mode .border-gray-200,
+        body.dark-mode .border-gray-300 {
+            border-color: #374151 !important;
+        }
+
+        /* Animação do Ícone Sol/Lua (Mantida) */
+        .theme-icon-container {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .rotate-icon {
+            transform: rotate(360deg) scale(1.2);
+        }
+
+        /* --- PERSONALIZAÇÃO DA BARRA DE ROLAGEM (SCROLLBAR) --- */
+
+        /* 1. Firefox (Padrão Moderno) */
+        html {
+            scrollbar-width: thin;
+            /* Deixa a barra mais fina */
+            scrollbar-color: #6d7683 #f3f4f6;
+            /* Cor do "polegar" e do "trilho" (Modo Claro) */
+        }
+
+        /* Firefox no Modo Escuro */
+        body.dark-mode {
+            scrollbar-color: #4b5563 #111827;
+            /* Polegar cinza, Trilho escuro (fundo da página) */
+        }
+
+        /* 2. WebKit (Chrome, Edge, Safari, Opera) */
+
+        /* Largura da barra */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+            /* Para scroll horizontal */
+        }
+
+        /* O "Trilho" (Fundo da barra) */
+        ::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            /* Cor clara padrão */
+            border-radius: 4px;
+        }
+
+        /* O "Polegar" (Parte que você arrasta) */
+        ::-webkit-scrollbar-thumb {
+            background-color: #9ca3af;
+            /* Cinza médio */
+            border-radius: 4px;
+            border: 2px solid #f3f4f6;
+            /* Cria uma borda para dar efeito de "flutuando" */
+        }
+
+        /* Hover no Polegar */
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #6b7280;
+        }
+
+        /* --- WEBKIT NO MODO ESCURO --- */
+
+        /* Fundo da barra no escuro */
+        body.dark-mode ::-webkit-scrollbar-track {
+            background: #111827;
+            /* Mesmo fundo da página (Gray 900) */
+        }
+
+        /* Polegar no escuro */
+        body.dark-mode ::-webkit-scrollbar-thumb {
+            background-color: #374151;
+            /* Gray 700 */
+            border: 2px solid #111827;
+            /* Borda da mesma cor do fundo para separar */
+        }
+
+        /* Hover no Polegar no escuro */
+        body.dark-mode ::-webkit-scrollbar-thumb:hover {
+            background-color: #4b5563;
+            /* Gray 600 - Um pouco mais claro ao passar o mouse */
+        }
+
+        /* --- ESTILIZAÇÃO AVANÇADA DE CHECKBOX --- */
+
+        /* 1. Resetar o estilo nativo do navegador */
+        input[type="checkbox"] {
+            -webkit-appearance: none;
+            /* Chrome/Safari/Edge */
+            appearance: none;
+            /* Firefox/Padrão */
+
+            /* Recriar o tamanho (equivale ao w-4 h-4 do Tailwind) */
+            width: 1rem;
+            height: 1rem;
+
+            /* Bordas e Fundo (Modo Claro Padrão) */
+            background-color: #fff;
+            border: 1px solid #d1d5db;
+            /* Gray 300 */
+            border-radius: 0.25rem;
+            /* Cantos arredondados */
+
+            /* Centralizar o ícone de check */
+            display: inline-grid;
+            place-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+
+        /* 2. O ícone de "Check" (Vzinho) */
+        /* Usamos um SVG encoded no CSS para não precisar de imagem externa */
+        input[type="checkbox"]::before {
+            content: "";
+            width: 0.65em;
+            height: 0.65em;
+            transform: scale(0);
+            /* Começa invisível */
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em white;
+            /* Pinta o ícone de branco */
+
+            /* Recorte do formato de V (SVG path) */
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+
+        /* 3. Estado MARCADO (Checked) - Modo Claro */
+        input[type="checkbox"]:checked {
+            background-color: #4f46e5;
+            /* Indigo 600 */
+            border-color: #4f46e5;
+        }
+
+        input[type="checkbox"]:checked::before {
+            transform: scale(1);
+            /* Mostra o ícone */
+        }
+
+        /* --- CHECKBOX NO MODO ESCURO --- */
+
+        /* Fundo escuro quando NÃO marcado */
+        body.dark-mode input[type="checkbox"] {
+            background-color: #555e6d;
+            /* Gray 700 - Combina com inputs */
+            border-color: #9fabbd;
+            /* Gray 600 - Borda sutil */
+        }
+
+        /* Hover no modo escuro (opcional, para dar feedback) */
+        body.dark-mode input[type="checkbox"]:hover {
+            border-color: #6b7280;
+        }
+
+        /* Estado MARCADO no Modo Escuro */
+        body.dark-mode input[type="checkbox"]:checked {
+            background-color: #818cf8;
+            /* Indigo 400 - Roxo mais claro (Lavanda) */
+            border-color: #818cf8;
+        }
+
+        /* --- AJUSTE FINO: Linhas da Tabela (Bordas) --- */
+        
+        /* Deixa a linha divisória entre as linhas bem escura e sutil */
+        body.dark-mode tbody tr {
+            border-bottom-color: #2d3748 !important; /* Slate 700/800 - Quase da cor do fundo */
+        }
+
+        /* Opcional: Se quiser a linha do cabeçalho também mais discreta */
+        body.dark-mode thead tr {
+            border-bottom-color: #2d3748 !important;
+        }
     </style>
 </head>
 
@@ -332,11 +621,21 @@
                     <ion-icon name="settings-outline" class="text-2xl min-w-[40px]"></ion-icon>
                     <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Configurações</span>
                 </a>
+                <a href="#" id="toggle-theme-btn"
+                    class="flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors"
+                    style="--hover-color: var(--sidebar-hover);" title="Alternar Tema (Escuro/Claro)">
+                    <div id="theme-icon-wrapper" class="theme-icon-container min-w-[40px]">
+                        <ion-icon name="moon-outline" id="theme-icon" class="text-2xl text-yellow-400"></ion-icon>
+                    </div>
+                    <span id="theme-text"
+                        class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0 text-gray-300">Modo
+                        Escuro</span>
+                </a>
                 <a href="#" id="background-import-status" title="Importação em andamento..."
                     class="hidden items-center p-3 rounded-lg hover:bg-gray-700"
                     style="--hover-color: var(--sidebar-hover);">
-                    <ion-icon name="cloud-upload-outline"
-                        class="text-2xl min-w-[40px] text-indigo-400 pulsing-cloud"></ion-icon>
+                    <ion-icon name="cloud-upload-outline" class="text-2xl min-w-[40px] text-indigo-400 pulsing-cloud">
+                    </ion-icon>
                     <span class="sidebar-item-text ml-4 font-medium whitespace-nowrap opacity-0">Importando...</span>
                 </a>
             </nav>
@@ -458,13 +757,15 @@
                                     <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600 cursor-pointer whitespace-nowrap"
                                         data-sort-key="code">
                                         <div class="flex items-center">Cód.<ion-icon name="caret-down-outline"
-                                                class="ml-1 opacity-50"></ion-icon></div>
+                                                class="ml-1 opacity-50"></ion-icon>
+                                        </div>
                                     </th>
                                     <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600">CNPJ</th>
                                     <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600 cursor-pointer"
                                         data-sort-key="name">
                                         <div class="flex items-center">Nome do Fornecedor<ion-icon
-                                                name="caret-down-outline" class="ml-1 opacity-50"></ion-icon></div>
+                                                name="caret-down-outline" class="ml-1 opacity-50"></ion-icon>
+                                        </div>
                                     </th>
                                     <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600">Cód. Cliente
                                     </th>
@@ -891,7 +1192,10 @@
             <div id="infoModalContent" class="p-6 space-y-1 overflow-y-auto">
                 <!-- Content injetado via JS -->
             </div>
-            <div class="p-4 bg-gray-100 border-t border-gray-200 flex justify-end rounded-b-xl mt-auto">
+            <div
+                class="p-4 bg-gray-100 border-t border-gray-200 flex justify-between items-center rounded-b-xl mt-auto">
+                <div id="infoModalLeftActions"></div>
+
                 <button id="okInfoModalBtn"
                     class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Fechar</button>
             </div>
@@ -926,6 +1230,62 @@
 
             // --- Proxy para contornar problemas de CORS (usando um novo proxy) ---
             const corsProxy = 'https://api.codetabs.com/v1/proxy/?quest=';
+            // --- Lógica do Tema Escuro (Dark Mode) ---
+            const toggleThemeBtn = document.getElementById('toggle-theme-btn');
+            const themeIcon = document.getElementById('theme-icon');
+            const themeIconWrapper = document.getElementById('theme-icon-wrapper');
+            const themeText = document.getElementById('theme-text');
+            const body = document.body;
+
+            // Função para aplicar o tema
+            const applyTheme = (isDark) => {
+                if (isDark) {
+                    body.classList.add('dark-mode');
+                    themeIcon.name = 'sunny-outline'; // Ícone de sol para voltar ao claro
+                    themeIcon.classList.remove('text-indigo-400'); // Remove cor padrão se houver
+                    themeIcon.classList.add('text-yellow-400');
+                    themeText.textContent = 'Modo Claro';
+                } else {
+                    body.classList.remove('dark-mode');
+                    themeIcon.name = 'moon-outline'; // Ícone de lua para ir ao escuro
+                    themeIcon.classList.remove('text-yellow-400');
+                    themeIcon.classList.add('text-indigo-400');
+                    themeText.textContent = 'Modo Escuro';
+                }
+            };
+
+            // Carregar preferência salva
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            // Se tiver salvo 'dark' OU (não tiver salvo nada E o sistema for dark)
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                applyTheme(true);
+            } else {
+                applyTheme(false);
+            }
+
+            // Evento de Clique
+            toggleThemeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // Animação
+                themeIconWrapper.classList.add('rotate-icon');
+                setTimeout(() => themeIconWrapper.classList.remove('rotate-icon'), 500);
+
+                const isDark = body.classList.contains('dark-mode');
+
+                // Inverte o estado
+                if (isDark) {
+                    applyTheme(false);
+                    localStorage.setItem('theme', 'light');
+                    showToast('Modo Claro ativado', 'info');
+                } else {
+                    applyTheme(true);
+                    localStorage.setItem('theme', 'dark');
+                    showToast('Modo Escuro ativado', 'success');
+                }
+            });
 
             // --- Função para Gerar HTML do Loader Animado ---
             const createContentLoader = (text) => {
@@ -2162,7 +2522,7 @@
 
                 const createInfoFieldWithValue = (icon, label, rawValue, formattedValue) => {
                     const hasValue = rawValue !== null && rawValue !== undefined && rawValue !== '';
-                    const sanitizedRawValue = String(rawValue || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const sanitizedRawValue = String(rawValue || '').replace(/'/g, "\\'").replace(/"/g, '"');
 
                     return `
                         <div class="flex items-start py-3 border-b border-gray-200 last:border-b-0">
@@ -2200,6 +2560,36 @@
                     ${createInfoFieldWithValue('calendar-outline', 'Data de Cadastro', supplier.dateTime, supplier.dateTime ? formatSupplierDate(supplier.dateTime) : displayData(null, 'Não registrada'))}
                     ${createInfoFieldWithValue('chatbubble-ellipses-outline', 'Observações', supplier.observations, displayData(supplier.observations))}
                 `;
+
+                // --- NOVO: Lógica do botão "Mais Informações" ---
+                const leftActions = document.getElementById('infoModalLeftActions');
+                const cleanCnpj = supplier.cnpj ? supplier.cnpj.replace(/\D/g, '') : '';
+
+                // Só mostra o botão se tiver um CNPJ válido (14 dígitos)
+                if (cleanCnpj && cleanCnpj.length === 14) {
+                    leftActions.innerHTML = `
+                        <button id="btnMoreInfoCnpj" class="flex items-center space-x-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-2 rounded-md transition font-medium text-sm">
+                            <ion-icon name="search-circle-outline" class="text-xl"></ion-icon>
+                            <span>Mais Informações</span>
+                        </button>
+                    `;
+
+                    // Adiciona o evento de clique ao botão recém-criado
+                    document.getElementById('btnMoreInfoCnpj').addEventListener('click', () => {
+                        closeInfoModal(); // Fecha o modal atual
+                        switchView('cnpj'); // Troca para a tela de CNPJ
+
+                        // Preenche o input (opcional, visualmente agradável)
+                        const cnpjInputView = document.getElementById('view-cnpj-input');
+                        cnpjInputView.value = formatCnpj(supplier.cnpj);
+
+                        // Executa a busca
+                        performCnpjSearch(supplier.cnpj);
+                    });
+                } else {
+                    leftActions.innerHTML = ''; // Limpa se não tiver CNPJ
+                }
+                // --- FIM DO NOVO CÓDIGO ---
 
                 const modal = document.getElementById('infoModal');
                 modal.classList.remove('hidden');

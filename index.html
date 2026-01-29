@@ -504,10 +504,11 @@
         }
 
         /* --- AJUSTE FINO: Linhas da Tabela (Bordas) --- */
-        
+
         /* Deixa a linha divisória entre as linhas bem escura e sutil */
         body.dark-mode tbody tr {
-            border-bottom-color: #2d3748 !important; /* Slate 700/800 - Quase da cor do fundo */
+            border-bottom-color: #2d3748 !important;
+            /* Slate 700/800 - Quase da cor do fundo */
         }
 
         /* Opcional: Se quiser a linha do cabeçalho também mais discreta */
@@ -2056,8 +2057,25 @@
 
             // --- Lógica de Ordenação e Filtro da Tabela ---
             function getSortedAndFilteredSuppliers() {
-                const searchTerm = searchFilter.toLowerCase().trim();
+                // 1. Mudamos de 'const' para 'let' para poder alterar o termo se for uma chave
+                let searchTerm = searchFilter.toLowerCase().trim();
                 let filteredSuppliers = suppliers;
+
+                // --- O PULO DO GATO (Lógica da Chave de Acesso NFe) ---
+                // Verifica se o termo digitado tem exatamente 44 dígitos numéricos
+                if (/^\d{44}$/.test(searchTerm)) {
+                    // Se for uma chave, extraímos o CNPJ (da posição 6 até a 20)
+                    // Posição 0 a 5 = UF e Data
+                    // Posição 6 a 19 = CNPJ (14 dígitos)
+                    const extractedCnpj = searchTerm.substring(6, 20);
+
+                    // Substituímos o termo de busca pelo CNPJ extraído
+                    searchTerm = extractedCnpj;
+
+                    // Opcional: Avisar ao usuário que a mágica aconteceu (pode remover se não quiser)
+                    // showToast(`Chave NFe detectada! Filtrando pelo CNPJ extraído.`, 'info');
+                }
+                // -------------------------------------------------------
 
                 if (searchTerm) {
                     filteredSuppliers = suppliers.filter(supplier => {
@@ -2070,6 +2088,7 @@
                                 (supplier.name || '').toLowerCase().includes(searchTerm) ||
                                 (supplier.clientCode || '').toLowerCase().includes(searchTerm) ||
                                 (supplier.observations || '').toLowerCase().includes(searchTerm) ||
+                                // A lógica original já compara números limpos, então vai funcionar perfeitamente
                                 (cleanCnpj.includes(cleanSearchTerm) && cleanSearchTerm.length > 0)
                             );
                         } else {

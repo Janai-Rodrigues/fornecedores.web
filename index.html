@@ -705,7 +705,8 @@
                                         class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Cód.
                                     </li>
                                     <li data-value="cnpj"
-                                        class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">CNPJ
+                                        class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">CNPJ /
+                                        CPF
                                     </li>
                                     <li data-value="name"
                                         class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Nome
@@ -761,7 +762,7 @@
                                                 class="ml-1 opacity-50"></ion-icon>
                                         </div>
                                     </th>
-                                    <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600">CNPJ</th>
+                                    <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600">CNPJ / CPF</th>
                                     <th class="py-1 px-4 text-left text-sm font-semibold text-gray-600 cursor-pointer"
                                         data-sort-key="name">
                                         <div class="flex items-center">Nome do Fornecedor<ion-icon
@@ -979,8 +980,20 @@
                                 required>
                         </div>
                         <div>
-                            <label for="supplierCnpj" class="block text-sm font-medium text-gray-700">CNPJ <span
-                                    class="text-red-500">*</span></label>
+                            <div class="flex items-center space-x-4 mb-1">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="docType" value="cnpj" checked
+                                        class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">CNPJ <span
+                                            class="text-red-500">*</span></span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="docType" value="cpf"
+                                        class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">CPF <span
+                                            class="text-red-500">*</span></span>
+                                </label>
+                            </div>
                             <div class="relative">
                                 <input type="text" id="supplierCnpj" name="supplierCnpj"
                                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
@@ -1416,6 +1429,30 @@
             const editSupplierIdInput = document.getElementById('editSupplierId');
 
             const cnpjInput = document.getElementById('supplierCnpj');
+            const docTypeRadios = document.querySelectorAll('input[name="docType"]');
+
+            docTypeRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const isCnpj = e.target.value === 'cnpj';
+
+                    // Ajusta tamanho e placeholder do input
+                    cnpjInput.maxLength = isCnpj ? 18 : 14;
+                    cnpjInput.placeholder = isCnpj ? "00.000.000/0000-00" : "000.000.000-00";
+                    cnpjInput.value = ''; // Limpa o campo ao trocar o tipo
+
+                    // Reseta o campo de Nome
+                    nameInput.value = '';
+                    if (!isCnpj) {
+                        // Se for CPF, a API não busca, então libera o campo para digitação manual
+                        nameInput.readOnly = false;
+                        nameInput.classList.remove('bg-gray-100');
+                    } else {
+                        // Se for CNPJ, bloqueia aguardando a API
+                        nameInput.readOnly = true;
+                        nameInput.classList.add('bg-gray-100');
+                    }
+                });
+            });
             const nameInput = document.getElementById('supplierName');
             const cnpjLoader = document.getElementById('cnpj-loader');
 
@@ -1906,6 +1943,10 @@
 
             // --- Lógica do Modal de Fornecedor ---
             window.openModal = (supplierId = null, prefill = {}) => {
+                // Configurações iniciais do form
+                document.querySelector('input[name="docType"][value="cnpj"]').checked = true;
+                document.getElementById('supplierCnpj').maxLength = 18;
+                document.getElementById('supplierCnpj').placeholder = "00.000.000/0000-00";
                 supplierForm.reset();
 
                 modalTitle.textContent = "Cadastrar Novo Fornecedor";
@@ -1917,25 +1958,63 @@
                 nameInput.classList.add('bg-gray-100');
                 document.querySelector('#supplierModal button[type="submit"]').textContent = 'Salvar Fornecedor';
 
+                // Captura o label do botão de Importar JSON e garante que ele comece visível
+                const importBtnLabel = document.querySelector('label[for="json-file-input"]');
+                if (importBtnLabel) {
+                    importBtnLabel.classList.remove('hidden');
+                    importBtnLabel.classList.add('flex');
+                }
+
                 if (supplierId) {
                     const supplier = suppliers.find(s => s.id === supplierId);
                     if (!supplier) return;
+
                     modalTitle.textContent = 'Editar Fornecedor';
                     document.querySelector('#supplierModal button[type="submit"]').textContent = 'Salvar Alterações';
                     editSupplierIdInput.value = supplier.id;
+
+                    // --- LÓGICA DE CNPJ/CPF ---
+                    const docValue = supplier.cnpj || '';
+                    const isCpf = docValue.length > 0 && docValue.length <= 14;
+
+                    const radioType = isCpf ? 'cpf' : 'cnpj';
+                    const radioInput = document.querySelector(`input[name="docType"][value="${radioType}"]`);
+                    if (radioInput) radioInput.checked = true;
+
+                    const cnpjInputEl = document.getElementById('supplierCnpj');
+                    cnpjInputEl.maxLength = isCpf ? 14 : 18;
+                    cnpjInputEl.placeholder = isCpf ? "000.000.000-00" : "00.000.000/0000-00";
+                    cnpjInputEl.value = docValue;
+
                     document.getElementById('supplierCode').value = supplier.code;
-                    document.getElementById('supplierCnpj').value = supplier.cnpj;
                     document.getElementById('supplierName').value = supplier.name;
                     document.getElementById('clientCode').value = supplier.clientCode || '';
                     document.getElementById('observations').value = supplier.observations || '';
+
                     nameInput.readOnly = false;
                     nameInput.classList.remove('bg-gray-100');
+
+                    // Esconde o botão de importar na edição
+                    if (importBtnLabel) {
+                        importBtnLabel.classList.remove('flex');
+                        importBtnLabel.classList.add('hidden');
+                    }
+
                 } else if (prefill.cnpj || prefill.name) {
-                    document.getElementById('supplierCnpj').value = prefill.cnpj || '';
-                    document.getElementById('supplierName').value = prefill.name || '';
+                    // --- PREENCHIMENTO VINDO DA BUSCA ---
+                    if (prefill.cnpj) {
+                        document.getElementById('supplierCnpj').value = prefill.cnpj;
+                    }
                     if (prefill.name) {
+                        nameInput.value = prefill.name;
                         nameInput.readOnly = false;
                         nameInput.classList.remove('bg-gray-100');
+                    }
+
+                    // Esconde o botão de importar ao vir da busca
+                    if (importBtnLabel) {
+                        importBtnLabel.classList.remove('flex');
+                        importBtnLabel.classList.add('hidden');
                     }
                 }
 
@@ -2024,34 +2103,41 @@
             });
 
             cnpjInput.addEventListener('input', async (e) => {
-                const cnpj = e.target.value.replace(/\D/g, '');
-                if (cnpj.length < 14) {
-                    nameInput.value = '';
-                    nameInput.readOnly = true;
-                    nameInput.classList.add('bg-gray-100');
-                    return;
-                }
-                if (cnpj.length === 14) {
-                    cnpjLoader.classList.remove('hidden');
-                    nameInput.value = 'Buscando...';
-                    try {
-                        const response = await fetch(`${corsProxy}https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
-                        if (!response.ok) {
-                            const errorData = await response.json().catch(() => null);
-                            throw { status: response.status, data: errorData };
-                        }
-                        const data = await response.json();
-                        nameInput.value = data.razao_social || '';
-                        nameInput.readOnly = false;
-                        nameInput.classList.remove('bg-gray-100');
-                    } catch (error) {
-                        handleApiError(error, 'Busca de CNPJ no Modal');
+                const docType = document.querySelector('input[name="docType"]:checked').value;
+
+                if (docType === 'cnpj') {
+                    e.target.value = formatCnpj(e.target.value);
+                    const cnpj = e.target.value.replace(/\D/g, '');
+
+                    if (cnpj.length < 14) {
                         nameInput.value = '';
-                        nameInput.readOnly = false;
-                        nameInput.classList.remove('bg-gray-100');
-                    } finally {
-                        cnpjLoader.classList.add('hidden');
+                        nameInput.readOnly = true;
+                        nameInput.classList.add('bg-gray-100');
+                        return;
                     }
+
+                    if (cnpj.length === 14) {
+                        cnpjLoader.classList.remove('hidden');
+                        nameInput.value = 'Buscando...';
+                        try {
+                            const response = await fetch(`${corsProxy}https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+                            if (!response.ok) throw { status: response.status };
+                            const data = await response.json();
+                            nameInput.value = data.razao_social || '';
+                            nameInput.readOnly = false;
+                            nameInput.classList.remove('bg-gray-100');
+                        } catch (error) {
+                            handleApiError(error, 'Busca de CNPJ no Modal');
+                            nameInput.value = '';
+                            nameInput.readOnly = false;
+                            nameInput.classList.remove('bg-gray-100');
+                        } finally {
+                            cnpjLoader.classList.add('hidden');
+                        }
+                    }
+                } else {
+                    // Lógica para CPF (apenas formata, sem chamada de API)
+                    e.target.value = formatCpf(e.target.value);
                 }
             });
 
@@ -2848,13 +2934,29 @@
                             <div class="bg-white p-6 rounded-xl shadow-sm">
                                <div class="flex flex-wrap justify-between items-start gap-4">
                                    <div>
-                                        <div class="flex items-center gap-3 mb-1">
+                                        <div class="flex items-center gap-3 mb-1 flex-wrap">
                                             <ion-icon name="business-outline" class="text-2xl text-gray-600"></ion-icon>
-                                            <h3 class="text-xl font-bold text-gray-800">${data.razao_social}</h3>
+                                            <div class="flex items-center gap-2">
+                                                <h3 class="text-xl font-bold text-gray-800">${data.razao_social}</h3>
+                                                <button class="copy-btn transition-colors flex items-center text-gray-400 hover:text-indigo-600" data-text="${String(data.razao_social).replace(/"/g, '&quot;')}" title="Copiar Razão Social">
+                                                    <ion-icon name="copy-outline" class="text-xl"></ion-icon>
+                                                </button>
+                                            </div>
                                             ${statusHtml}
                                         </div>
-                                        <p class="text-sm text-gray-500 pl-9">${data.nome_fantasia || 'Sem nome fantasia'}</p>
-                                        <div class="pl-9">
+                                        
+                                        ${data.nome_fantasia ? `
+                                        <div class="flex items-center gap-2 pl-9 mb-2">
+                                            <p class="text-sm text-gray-500">${data.nome_fantasia}</p>
+                                            <button class="copy-btn transition-colors flex items-center text-gray-400 hover:text-indigo-600" data-text="${String(data.nome_fantasia).replace(/"/g, '&quot;')}" title="Copiar Nome Fantasia">
+                                                <ion-icon name="copy-outline" class="text-lg"></ion-icon>
+                                            </button>
+                                        </div>
+                                        ` : `
+                                        <p class="text-sm text-gray-400 italic pl-9 mb-2">Sem nome fantasia</p>
+                                        `}
+                                        
+                                        <div class="pl-9 mt-1">
                                             ${registrationBadgeHtml}
                                         </div>
                                    </div>
@@ -2943,7 +3045,6 @@
             };
 
             viewCnpjInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
-            cnpjInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
 
 
             document.addEventListener('keydown', (e) => {
@@ -3149,6 +3250,15 @@
                 cnpj = cnpj.replace(/\.(\d{3})(\d)/, '.$1/$2');
                 cnpj = cnpj.replace(/(\d{4})(\d)/, '$1-$2');
                 return cnpj.slice(0, 18);
+            }
+
+            function formatCpf(value) {
+                if (!value) return "";
+                let cpf = String(value).replace(/\D/g, '');
+                cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
+                cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
+                cpf = cpf.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                return cpf.slice(0, 14);
             }
 
             function formatPhone(phone) {

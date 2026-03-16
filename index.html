@@ -303,14 +303,19 @@
             /* Indigo 200 - Brilho ao interagir */
         }
 
-        /* Textos Secundários (Cinzas) */
+        /* Rótulos e Títulos Secundários (Ficam Cinza) */
         body.dark-mode .text-gray-500,
         body.dark-mode .text-gray-600,
-        body.dark-mode .text-gray-700,
-        body.dark-mode .text-gray-800,
-        body.dark-mode .text-gray-900 {
+        body.dark-mode .text-gray-700 {
             color: #9ca3af !important;
             /* Gray 400 */
+        }
+
+        /* Valores e Resultados (Ficam Brancos no modo escuro) */
+        body.dark-mode .text-gray-800,
+        body.dark-mode .text-gray-900 {
+            color: #ffffff !important;
+            /* Branco puro para destacar */
         }
 
         /* Títulos */
@@ -335,10 +340,16 @@
             color: #6b7280;
         }
 
-        /* Bordas Gerais */
+        /* Bordas Gerais e Linhas Divisórias */
+        body.dark-mode .border,
+        body.dark-mode .border-t,
+        body.dark-mode .border-b,
+        body.dark-mode .border-l,
+        body.dark-mode .border-r,
         body.dark-mode .border-gray-200,
         body.dark-mode .border-gray-300 {
             border-color: #374151 !important;
+            /* Gray 700 - Cinza escuro sutil */
         }
 
         /* Animação do Ícone Sol/Lua (Mantida) */
@@ -505,15 +516,25 @@
 
         /* --- AJUSTE FINO: Linhas da Tabela (Bordas) --- */
 
-        /* Deixa a linha divisória entre as linhas bem escura e sutil */
-        body.dark-mode tbody tr {
-            border-bottom-color: #2d3748 !important;
-            /* Slate 700/800 - Quase da cor do fundo */
+        /* --- AJUSTE FINO: Linhas da Tabela (Bordas) --- */
+
+        /* Deixa a linha divisória entre as linhas no mesmo padrão cinza escuro */
+        body.dark-mode tbody tr,
+        body.dark-mode thead tr {
+            border-bottom-color: #374151 !important;
+            /* Gray 700 */
         }
 
-        /* Opcional: Se quiser a linha do cabeçalho também mais discreta */
-        body.dark-mode thead tr {
-            border-bottom-color: #2d3748 !important;
+        /* Texto da tabela branco no modo escuro */
+        body.dark-mode tbody tr td,
+        body.dark-mode tbody tr td .text-gray-500 {
+            color: #ffffff !important;
+        }
+
+        /* Ajuste do hover do botão de limpar filtro no modo escuro */
+        body.dark-mode #clear-filter-btn:hover {
+            background-color: #374151 !important; /* Fundo cinza escuro (Gray 700) */
+            color: #f3f4f6 !important; /* Ícone mais claro */
         }
     </style>
 </head>
@@ -808,7 +829,7 @@
                         <label for="cepInput" class="block text-sm font-medium text-gray-700">Digite o CEP</label>
                         <div class="flex items-center space-x-2 mt-1">
                             <input type="text" id="cepInput" placeholder="00000-000" maxlength="9"
-                                class="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                class="w-36 tracking-widest border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                 required>
                             <button type="submit"
                                 class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 flex items-center space-x-2">
@@ -858,7 +879,7 @@
             </div>
 
             <div id="cnpj-search-view" class="flex-1 p-6 overflow-y-auto hidden">
-                <div id="cnpj-search-container" class="bg-white p-8 rounded-xl shadow-sm mb-6">
+                <div id="cnpj-search-container" class="bg-white p-8 rounded-xl shadow-sm mb-6 max-w-xl mx-auto mt-10">
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">Consultar CNPJ</h2>
                     <p class="text-gray-500">Busque por um CNPJ para ver os detalhes da empresa. (CTRL+D)</p>
                     <form id="cnpj-search-form" class="mt-6">
@@ -866,7 +887,7 @@
                             CNPJ</label>
                         <div class="flex items-center space-x-2 mt-1">
                             <input type="text" id="view-cnpj-input" placeholder="00.000.000/0000-00"
-                                class="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                class="w-56 tracking-widest border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                 required maxlength="18">
                             <button type="submit"
                                 class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 flex items-center space-x-2">
@@ -2984,7 +3005,7 @@
                     }
 
                     cnpjResultDiv.innerHTML = `
-                        <div class="space-y-4">
+                        <div class="space-y-4 pb-6">
                             <div class="bg-white p-6 rounded-xl shadow-sm">
                                <div class="flex flex-wrap justify-between items-start gap-4">
                                    <div>

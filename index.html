@@ -79,6 +79,12 @@
             color: #d1d5db;
         }
 
+        /* Cor do placeholder do Quill no modo escuro */
+        body.dark-mode .ql-editor.ql-blank::before {
+            color: #9ca3af !important; /* Um cinza claro para dar contraste no fundo escuro */
+            font-style: italic;
+        }
+
         /* Animação de transição para a sidebar */
         #sidebar {
             transition: width 0.3s ease-in-out;
@@ -2301,23 +2307,38 @@
                             // --- CÓDIGO DA CÉLULA DE OBSERVAÇÃO ---
                             const rawObs = supplier.observations || '';
                             const tempDiv = document.createElement('div');
-                            tempDiv.innerHTML = rawObs;
-                            const textOnly = tempDiv.textContent || tempDiv.innerText || '';
+                            
+                            // Substitui o fechamento de blocos por quebra de linha real
+                            tempDiv.innerHTML = rawObs.replace(/<\/(p|div|li)>/gi, '\n').replace(/<br\s*\/?>/gi, '\n');
+                            
+                            const fullText = tempDiv.textContent || '';
+                            
+                            // Separa as linhas e remove as vazias
+                            const linhas = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                            
+                            // Monta o resumo unindo até as duas primeiras linhas
+                            let textoResumo = '';
+                            if (linhas.length === 1) {
+                                textoResumo = linhas[0];
+                            } else if (linhas.length >= 2) {
+                                textoResumo = `${linhas[0]} - ${linhas[1]}`;
+                            }
 
-                            let obsHtml = `<td class="py-1 px-4 text-sm text-gray-500 max-w-[200px] truncate copyable-cell" title="Sem observações"></td>`;
+                            let obsHtml = `<td class="py-1 px-4 text-sm text-gray-500 max-w-[300px] truncate copyable-cell" title="Sem observações"></td>`;
 
-                            if (textOnly.trim().length > 0) {
-                                if (textOnly.length > 25 || rawObs.includes('<ul>') || rawObs.includes('<ol>') || rawObs.includes('<strong>')) {
+                            if (textoResumo.length > 0) {
+                                // Exige o botão se: o resumo passar de 40 letras, tiver mais de 2 linhas, ou tiver listas/negrito
+                                if (textoResumo.length > 40 || linhas.length > 2 || rawObs.includes('<ul>') || rawObs.includes('<ol>') || rawObs.includes('<strong>')) {
                                     obsHtml = `
-                                        <td class="py-1 px-4 text-sm text-gray-500 max-w-[200px]">
+                                        <td class="py-1 px-4 text-sm text-gray-500 max-w-[300px]">
                                             <div class="flex items-center justify-between gap-2">
-                                                <span class="truncate flex-1">${textOnly.substring(0, 25)}...</span>
+                                                <span class="truncate flex-1">${textoResumo.substring(0, 40)}...</span>
                                                 <button class="ver-mais-btn text-indigo-600 hover:text-indigo-800 font-semibold whitespace-nowrap text-xs bg-indigo-50 px-2 py-1 rounded-md transition" data-obs="${encodeURIComponent(rawObs)}">Ver mais</button>
                                             </div>
                                         </td>
                                     `;
                                 } else {
-                                    obsHtml = `<td class="py-1 px-4 text-sm text-gray-500 max-w-[200px] truncate copyable-cell">${textOnly}</td>`;
+                                    obsHtml = `<td class="py-1 px-4 text-sm text-gray-500 max-w-[300px] truncate copyable-cell">${textoResumo}</td>`;
                                 }
                             }
                             // ------------------------------------------

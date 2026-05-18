@@ -81,7 +81,8 @@
 
         /* Cor do placeholder do Quill no modo escuro */
         body.dark-mode .ql-editor.ql-blank::before {
-            color: #9ca3af !important; /* Um cinza claro para dar contraste no fundo escuro */
+            color: #9ca3af !important;
+            /* Um cinza claro para dar contraste no fundo escuro */
             font-style: italic;
         }
 
@@ -856,6 +857,7 @@
                                 <span>Buscar</span>
                             </button>
                         </div>
+                        <p id="view-cnpj-error" class="text-sm text-red-500 mt-2 hidden"></p>
                     </form>
                 </div>
                 <div id="cnpj-result" class="h-full">
@@ -1473,6 +1475,7 @@
             const cnpjResultDiv = document.getElementById('cnpj-result');
             const cnpjSearchForm = document.getElementById('cnpj-search-form');
             const viewCnpjInput = document.getElementById('view-cnpj-input');
+            const viewCnpjError = document.getElementById('view-cnpj-error');
 
             // Modais
             const confirmDeleteModal = document.getElementById('confirmDeleteModal');
@@ -2307,15 +2310,15 @@
                             // --- CÓDIGO DA CÉLULA DE OBSERVAÇÃO ---
                             const rawObs = supplier.observations || '';
                             const tempDiv = document.createElement('div');
-                            
+
                             // Substitui o fechamento de blocos por quebra de linha real
                             tempDiv.innerHTML = rawObs.replace(/<\/(p|div|li)>/gi, '\n').replace(/<br\s*\/?>/gi, '\n');
-                            
+
                             const fullText = tempDiv.textContent || '';
-                            
+
                             // Separa as linhas e remove as vazias
                             const linhas = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                            
+
                             // Monta o resumo unindo até as duas primeiras linhas
                             let textoResumo = '';
                             if (linhas.length === 1) {
@@ -2918,10 +2921,15 @@
                 headerSearchContainer.classList.add('hidden');
                 cnpjResultDiv.innerHTML = '';
                 viewCnpjInput.value = '';
+
+                // Novas linhas para garantir que os erros de buscas passadas sumam
+                viewCnpjError.classList.add('hidden');
+                viewCnpjInput.classList.remove('border-red-500', 'focus:ring-red-500');
+                viewCnpjInput.classList.add('border-gray-300', 'focus:ring-indigo-500');
+
                 viewCnpjInput.focus();
                 cnpjSearchPerformed = false;
             });
-
             cnpjSearchForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 performCnpjSearch(viewCnpjInput.value);
@@ -2929,12 +2937,36 @@
 
             const performCnpjSearch = async (cnpjValue) => {
                 const cnpj = cnpjValue.replace(/\D/g, '');
+
+                // Garante que o painel de busca apareça e o botão do cabeçalho suma ao iniciar uma nova validação
+                cnpjSearchContainer.classList.remove('hidden');
+                headerSearchContainer.classList.add('hidden');
+
+                // Limpa erros anteriores
+                viewCnpjError.classList.add('hidden');
+                viewCnpjInput.classList.remove('border-red-500', 'focus:ring-red-500');
+                viewCnpjInput.classList.add('border-gray-300', 'focus:ring-indigo-500');
+
+                // 1ª Validação: Quantidade de dígitos
                 if (cnpj.length !== 14) {
-                    showToast('CNPJ inválido. Deve conter 14 dígitos.', 'error');
+                    viewCnpjError.textContent = 'CNPJ incompleto. Deve conter 14 dígitos.';
+                    viewCnpjError.classList.remove('hidden');
+                    viewCnpjInput.classList.remove('border-gray-300', 'focus:ring-indigo-500');
+                    viewCnpjInput.classList.add('border-red-500', 'focus:ring-red-500');
+                    return;
+                }
+
+                // 2ª Validação: Validação matemática real (Evita buscas de números falsos como 00000000000000)
+                if (!isValidCnpj(cnpj)) {
+                    viewCnpjError.textContent = 'CNPJ inválido (Dígitos verificadores incorretos).';
+                    viewCnpjError.classList.remove('hidden');
+                    viewCnpjInput.classList.remove('border-gray-300', 'focus:ring-indigo-500');
+                    viewCnpjInput.classList.add('border-red-500', 'focus:ring-red-500');
                     return;
                 }
 
                 cnpjResultDiv.innerHTML = createContentLoader('Consultando CNPJ...');
+
                 try {
                     const response = await fetch(`${corsProxy}https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
                     if (!response.ok) {
@@ -2944,8 +2976,8 @@
                     const data = await response.json();
 
                     cnpjSearchPerformed = true;
-                    cnpjSearchContainer.classList.add('hidden');
-                    headerSearchContainer.classList.remove('hidden');
+                    cnpjSearchContainer.classList.add('hidden'); // Esconde o formulário apenas em caso de SUCESSO
+                    headerSearchContainer.classList.remove('hidden'); // Mostra o botão do cabeçalho apenas em caso de SUCESSO
 
                     const cleanCnpj = data.cnpj.replace(/\D/g, '');
                     const cnpjaUrl = `https://cnpja.com/office/${cleanCnpj}`;
@@ -2958,56 +2990,56 @@
 
                     if (existingSupplier) {
                         registrationBadgeHtml = `
-                            <div class="mt-2 inline-flex items-center bg-orange-100 text-orange-800 px-3 py-1 rounded-md text-sm font-medium border border-orange-200">
-                                <ion-icon name="alert-circle-outline" class="mr-2 text-lg"></ion-icon>
-                                <span>Já cadastrado (Cód: ${existingSupplier.code})</span>
-                            </div>`;
+                <div class="mt-2 inline-flex items-center bg-orange-100 text-orange-800 px-3 py-1 rounded-md text-sm font-medium border border-orange-200">
+                    <ion-icon name="alert-circle-outline" class="mr-2 text-lg"></ion-icon>
+                    <span>Já cadastrado (Cód: ${existingSupplier.code})</span>
+                </div>`;
 
                         actionButtonHtml = `
-                            <button id="edit-existing-supplier-btn" data-id="${existingSupplier.id}" class="bg-yellow-500 text-white px-4 py-2 text-sm rounded-md hover:bg-yellow-600 flex items-center space-x-2 whitespace-nowrap">
-                                <ion-icon name="create-outline"></ion-icon>
-                                <span>Editar Cadastro Existente</span>
-                            </button>`;
+                <button id="edit-existing-supplier-btn" data-id="${existingSupplier.id}" class="bg-yellow-500 text-white px-4 py-2 text-sm rounded-md hover:bg-yellow-600 flex items-center space-x-2 whitespace-nowrap">
+                    <ion-icon name="create-outline"></ion-icon>
+                    <span>Editar Cadastro Existente</span>
+                </button>`;
                     } else {
                         registrationBadgeHtml = `
-                            <div class="mt-2 inline-flex items-center bg-gray-100 text-gray-600 px-3 py-1 rounded-md text-sm font-medium border border-gray-200">
-                                <ion-icon name="ellipse-outline" class="mr-2 text-xs"></ion-icon>
-                                <span>Não cadastrado no sistema</span>
-                            </div>`;
+                <div class="mt-2 inline-flex items-center bg-gray-100 text-gray-600 px-3 py-1 rounded-md text-sm font-medium border border-gray-200">
+                    <ion-icon name="ellipse-outline" class="mr-2 text-xs"></ion-icon>
+                    <span>Não cadastrado no sistema</span>
+                </div>`;
 
                         actionButtonHtml = `
-                            <button id="register-as-supplier-btn" class="bg-green-600 text-white px-4 py-2 text-sm rounded-md hover:bg-green-700 flex items-center space-x-2 whitespace-nowrap">
-                                <ion-icon name="person-add-outline"></ion-icon>
-                                <span>Cadastrar como fornecedor</span>
-                            </button>`;
+                <button id="register-as-supplier-btn" class="bg-green-600 text-white px-4 py-2 text-sm rounded-md hover:bg-green-700 flex items-center space-x-2 whitespace-nowrap">
+                    <ion-icon name="person-add-outline"></ion-icon>
+                    <span>Cadastrar como fornecedor</span>
+                </button>`;
                     }
 
                     const status = data.descricao_situacao_cadastral;
                     let statusHtml = '';
                     if (status === 'ATIVA') {
                         statusHtml = `
-                            <div class="flex items-center gap-2 text-sm font-medium ml-3">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="10" fill="#22C55E"></circle>
-                                    <path d="M8.5 12.5L11 15L15.5 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span class="text-green-700">Ativa</span>
-                            </div>`;
+                <div class="flex items-center gap-2 text-sm font-medium ml-3">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" fill="#22C55E"></circle>
+                        <path d="M8.5 12.5L11 15L15.5 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="text-green-700">Ativa</span>
+                </div>`;
                     } else if (status === 'BAIXADA') {
                         statusHtml = `
-                            <div class="flex items-center gap-4 ml-3">
-                                <div class="flex items-center gap-2 text-sm font-medium">
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <circle cx="12" cy="12" r="10" fill="#EF4444"></circle>
-                                        <path d="M15 9L9 15M9 9L15 15" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <span class="text-red-700">Baixada</span>
-                                </div>
-                                <div class="flex items-center gap-1.5 text-xs text-gray-500">
-                                    <ion-icon name="calendar-outline"></ion-icon>
-                                    <span>${formatDate(data.data_situacao_cadastral)}</span>
-                                </div>
-                            </div>`;
+                <div class="flex items-center gap-4 ml-3">
+                    <div class="flex items-center gap-2 text-sm font-medium">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" fill="#EF4444"></circle>
+                            <path d="M15 9L9 15M9 9L15 15" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="text-red-700">Baixada</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-xs text-gray-500">
+                        <ion-icon name="calendar-outline"></ion-icon>
+                        <span>${formatDate(data.data_situacao_cadastral)}</span>
+                    </div>
+                </div>`;
                     }
 
                     const renderCnaes = (cnaes) => {
@@ -3016,96 +3048,96 @@
                     }
 
                     cnpjResultDiv.innerHTML = `
-                        <div class="space-y-4 pb-4">
-                            <div class="bg-white p-6 rounded-xl shadow-sm">
-                               <div class="flex flex-wrap justify-between items-start gap-4">
-                                   <div>
-                                        <div class="flex items-center gap-3 mb-1 flex-wrap">
-                                            <ion-icon name="business-outline" class="text-2xl text-gray-600"></ion-icon>
-                                            <div class="flex items-center gap-2">
-                                                <h3 class="text-xl font-bold text-gray-800">${data.razao_social}</h3>
-                                                <button class="copy-btn transition-colors flex items-center text-gray-400 hover:text-indigo-600" data-text="${String(data.razao_social).replace(/"/g, '"')}" title="Copiar Razão Social">
-                                                    <ion-icon name="copy-outline" class="text-xl"></ion-icon>
-                                                </button>
-                                            </div>
-                                            ${statusHtml}
-                                        </div>
-                                        
-                                        ${data.nome_fantasia ? `
-                                        <div class="flex items-center gap-2 pl-9 mb-2">
-                                            <p class="text-sm text-gray-500">${data.nome_fantasia}</p>
-                                            <button class="copy-btn transition-colors flex items-center text-gray-400 hover:text-indigo-600" data-text="${String(data.nome_fantasia).replace(/"/g, '"')}" title="Copiar Nome Fantasia">
-                                                <ion-icon name="copy-outline" class="text-lg"></ion-icon>
-                                            </button>
-                                        </div>
-                                        ` : `
-                                        <p class="text-sm text-gray-400 italic pl-9 mb-2">Sem nome fantasia</p>
-                                        `}
-                                        
-                                        <div class="pl-9 mt-1">
-                                            ${registrationBadgeHtml}
-                                        </div>
-                                   </div>
-                                    <div class="flex items-center space-x-2 flex-wrap gap-y-2">
-                                        ${actionButtonHtml}
-                                        <a href="${cnpjaUrl}" target="_blank" class="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 flex items-center space-x-2 whitespace-nowrap">
-                                                <ion-icon name="open-outline"></ion-icon>
-                                                <span>Consulta Completa</span>
-                                        </a>
-                                    </div>
-                               </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                                <div class="lg:col-span-2 space-y-4">
-                                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Dados Gerais</h4>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 text-sm">
-                                            ${createStyledField('business-outline', 'CNPJ', formatCnpj(data.cnpj))}
-                                            ${createStyledField('information-circle-outline', 'Situação Cadastral', `${data.descricao_situacao_cadastral} desde ${formatDate(data.data_situacao_cadastral)}`)}
-                                            ${createStyledField('calendar-outline', 'Data de Abertura', formatDate(data.data_inicio_atividade))}
-                                            ${createStyledField('expand-outline', 'Porte', data.porte)}
-                                            ${createStyledField('call-outline', 'Telefone', formatPhone(data.ddd_telefone_1) || 'Não informado')}
-                                            ${createStyledField('mail-outline', 'E-mail', data.email || 'Não informado')}
-                                            ${createStyledField('document-text-outline', 'Natureza Jurídica', data.natureza_juridica)}
-                                            ${createStyledField('cash-outline', 'Capital Social', Number(data.capital_social).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))}
-                                        </div>
-                                    </div>
-                                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Endereço</h4>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 text-sm">
-                                            ${createStyledField('location-outline', 'Logradouro', `${(data.descricao_tipo_de_logradouro ? data.descricao_tipo_de_logradouro + ' ' : '')}${data.logradouro}`)}
-                                            ${createStyledField('list-outline', 'Número', data.numero)}
-                                            ${createStyledField('cube-outline', 'Complemento', data.complemento)}
-                                            ${createStyledField('map-outline', 'Bairro', data.bairro)}
-                                            ${createStyledField('trail-sign-outline', 'Município / UF', `${data.municipio} / ${data.uf}`)}
-                                            ${createStyledField('locate-outline', 'CEP', data.cep.replace(/(\d{5})(\d{3})/, '$1-$2'))}
-                                        </div>
-                                    </div>
+            <div class="space-y-4 pb-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                   <div class="flex flex-wrap justify-between items-start gap-4">
+                       <div>
+                            <div class="flex items-center gap-3 mb-1 flex-wrap">
+                                <ion-icon name="business-outline" class="text-2xl text-gray-600"></ion-icon>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-xl font-bold text-gray-800">${data.razao_social}</h3>
+                                    <button class="copy-btn transition-colors flex items-center text-gray-400 hover:text-indigo-600" data-text="${String(data.razao_social).replace(/"/g, '"')}" title="Copiar Razão Social">
+                                        <ion-icon name="copy-outline" class="text-xl"></ion-icon>
+                                    </button>
                                 </div>
-
-                                <div class="space-y-4">
-                                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Atividade Principal (CNAE)</h4>
-                                        <div class="pt-4 text-sm">
-                                            ${createStyledField('briefcase-outline', data.cnae_fiscal, data.cnae_fiscal_descricao, true)}
-                                        </div>
-                                    </div>
-                                     <div class="bg-white p-6 rounded-xl shadow-sm">
-                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Atividades Secundárias</h4>
-                                        <div class="pt-4 text-sm space-y-3 max-h-48 overflow-y-auto">
-                                            ${renderCnaes(data.cnaes_secundarios)}
-                                        </div>
-                                    </div>
-                                     <div class="bg-white p-6 rounded-xl shadow-sm">
-                                        <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Quadro Societário</h4>
-                                        <div class="pt-4 text-sm space-y-3 max-h-60 overflow-y-auto">
-                                            ${data.qsa && data.qsa.length > 0 ? data.qsa.map(socio => createStyledField('person-circle-outline', socio.nome_socio, socio.qualificacao_socio)).join('') : '<p class="text-gray-500">Nenhum sócio encontrado.</p>'}
-                                        </div>
-                                    </div>
-                                </div>
+                                ${statusHtml}
                             </div>
-                        </div>`;
+                            
+                            ${data.nome_fantasia ? `
+                            <div class="flex items-center gap-2 pl-9 mb-2">
+                                <p class="text-sm text-gray-500">${data.nome_fantasia}</p>
+                                <button class="copy-btn transition-colors flex items-center text-gray-400 hover:text-indigo-600" data-text="${String(data.nome_fantasia).replace(/"/g, '"')}" title="Copiar Nome Fantasia">
+                                    <ion-icon name="copy-outline" class="text-lg"></ion-icon>
+                                </button>
+                            </div>
+                            ` : `
+                            <p class="text-sm text-gray-400 italic pl-9 mb-2">Sem nome fantasia</p>
+                            `}
+                            
+                            <div class="pl-9 mt-1">
+                                ${registrationBadgeHtml}
+                            </div>
+                       </div>
+                        <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+                            ${actionButtonHtml}
+                            <a href="${cnpjaUrl}" target="_blank" class="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 flex items-center space-x-2 whitespace-nowrap">
+                                    <ion-icon name="open-outline"></ion-icon>
+                                    <span>Consulta Completa</span>
+                            </a>
+                        </div>
+                   </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Dados Gerais</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 text-sm">
+                                ${createStyledField('business-outline', 'CNPJ', formatCnpj(data.cnpj))}
+                                ${createStyledField('information-circle-outline', 'Situação Cadastral', `${data.descricao_situacao_cadastral} desde ${formatDate(data.data_situacao_cadastral)}`)}
+                                ${createStyledField('calendar-outline', 'Data de Abertura', formatDate(data.data_inicio_atividade))}
+                                ${createStyledField('expand-outline', 'Porte', data.porte)}
+                                ${createStyledField('call-outline', 'Telefone', formatPhone(data.ddd_telefone_1) || 'Não informado')}
+                                ${createStyledField('mail-outline', 'E-mail', data.email || 'Não informado')}
+                                ${createStyledField('document-text-outline', 'Natureza Jurídica', data.natureza_juridica)}
+                                ${createStyledField('cash-outline', 'Capital Social', Number(data.capital_social).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))}
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Endereço</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 text-sm">
+                                ${createStyledField('location-outline', 'Logradouro', `${(data.descricao_tipo_de_logradouro ? data.descricao_tipo_de_logradouro + ' ' : '')}${data.logradouro}`)}
+                                ${createStyledField('list-outline', 'Número', data.numero)}
+                                ${createStyledField('cube-outline', 'Complemento', data.complemento)}
+                                ${createStyledField('map-outline', 'Bairro', data.bairro)}
+                                ${createStyledField('trail-sign-outline', 'Município / UF', `${data.municipio} / ${data.uf}`)}
+                                ${createStyledField('locate-outline', 'CEP', data.cep.replace(/(\d{5})(\d{3})/, '$1-$2'))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Atividade Principal (CNAE)</h4>
+                            <div class="pt-4 text-sm">
+                                ${createStyledField('briefcase-outline', data.cnae_fiscal, data.cnae_fiscal_descricao, true)}
+                            </div>
+                        </div>
+                         <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Atividades Secundárias</h4>
+                            <div class="pt-4 text-sm space-y-3 max-h-48 overflow-y-auto">
+                                ${renderCnaes(data.cnaes_secundarios)}
+                            </div>
+                        </div>
+                         <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Quadro Societário</h4>
+                            <div class="pt-4 text-sm space-y-3 max-h-60 overflow-y-auto">
+                                ${data.qsa && data.qsa.length > 0 ? data.qsa.map(socio => createStyledField('person-circle-outline', socio.nome_socio, socio.qualificacao_socio)).join('') : '<p class="text-gray-500">Nenhum sócio encontrado.</p>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
 
                     if (existingSupplier) {
                         document.getElementById('edit-existing-supplier-btn').addEventListener('click', (e) => {
@@ -3123,12 +3155,42 @@
                     }
 
                 } catch (error) {
-                    handleApiError(error, 'Busca de CNPJ');
-                    cnpjResultDiv.innerHTML = `<div class="flex items-center justify-center h-full text-red-500"><p>Falha ao buscar CNPJ. Verifique o número e tente novamente.</p></div>`;
+                    cnpjResultDiv.innerHTML = '';
+
+                    cnpjSearchContainer.classList.remove('hidden');
+                    headerSearchContainer.classList.add('hidden');
+
+                    // CORREÇÃO: O padrão agora é avisar sobre a internet!
+                    let errorMsg = 'Falha na conexão. Verifique sua internet e tente novamente.';
+
+                    // O sistema só muda a mensagem se a internet estiver funcionando e a API responder um código
+                    if (error && error.status) {
+                        if (error.status === 404) {
+                            errorMsg = 'CNPJ não encontrado na base de dados da Receita Federal.';
+                        } else if (error.status === 429) {
+                            errorMsg = 'Muitas consultas simultâneas. Tente novamente em alguns instantes.';
+                        } else {
+                            errorMsg = `O servidor da API falhou (Código: ${error.status}). Tente novamente mais tarde.`;
+                        }
+                    }
+
+                    // Exibe na tela
+                    viewCnpjError.textContent = errorMsg;
+                    viewCnpjError.classList.remove('hidden');
+                    viewCnpjInput.classList.remove('border-gray-300', 'focus:ring-indigo-500');
+                    viewCnpjInput.classList.add('border-red-500', 'focus:ring-red-500');
+                    viewCnpjInput.focus();
                 }
             };
 
-            viewCnpjInput.addEventListener('input', (e) => { e.target.value = formatCnpj(e.target.value); });
+            viewCnpjInput.addEventListener('input', (e) => {
+                e.target.value = formatCnpj(e.target.value);
+
+                // Limpa o alerta visual assim que o usuário começar a corrigir o número
+                viewCnpjError.classList.add('hidden');
+                viewCnpjInput.classList.remove('border-red-500', 'focus:ring-red-500');
+                viewCnpjInput.classList.add('border-gray-300', 'focus:ring-indigo-500');
+            });
 
 
             document.addEventListener('keydown', (e) => {

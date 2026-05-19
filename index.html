@@ -281,46 +281,65 @@
             }
         }
 
-        /* --- ESTILOS DO MODO ESCURO (DARK MODE) - AJUSTADO --- */
+        /* --- ESTILOS DO MODO ESCURO (DARK MODE) - SUAVE / CONFORTÁVEL --- */
+        /* --- ESTILOS DO MODO ESCURO (DARK MODE) - SUAVE / CONFORTÁVEL --- */
         body.dark-mode {
-            background-color: #111827;
-            color: #f3f4f6;
+            background-color: #1e293b;
+            /* Fundo principal mais suave (slate-800) */
+            color: #e2e8f0;
+            /* Texto base não tão branco (slate-200) */
+            --sidebar-bg: #334155;
+            /* Iguala a barra lateral */
+            color-scheme: dark;
+            /* Pulo do gato: escurece nativamente checkboxes e scrollbars no navegador */
+        }
+
+        body.dark-mode #sidebar .hover\:bg-gray-700:hover {
+            background-color: #475569 !important;
         }
 
         body.dark-mode .bg-white {
-            background-color: #1f2937 !important;
-            color: #e5e7eb;
-            border-color: #374151;
+            background-color: #334155 !important;
+            /* Fundo dos cards (slate-700) */
+            color: #e2e8f0;
+            border-color: #475569;
+            /* slate-600 */
         }
 
         body.dark-mode .bg-gray-50,
         body.dark-mode .bg-gray-100,
         body.dark-mode .bg-gray-200 {
-            background-color: #111827 !important;
-            color: #d1d5db;
+            background-color: #1e293b !important;
+            color: #cbd5e1;
+            /* slate-300 */
         }
 
         body.dark-mode thead tr {
             background-color: #0f172a !important;
+            /* Cabeçalho da tabela um tom mais escuro (slate-900) */
         }
 
         body.dark-mode tbody tr:hover {
-            background-color: #1f2937 !important;
+            background-color: #475569 !important;
+            /* Hover mais suave na tabela (slate-600) */
         }
 
         body.dark-mode .copyable-cell:hover {
-            background-color: #374151 !important;
-            color: #fff !important;
+            background-color: #64748b !important;
+            /* slate-500 */
+            color: #f8fafc !important;
         }
 
         body.dark-mode .bg-indigo-50 {
-            background-color: rgba(99, 102, 241, 0.15) !important;
+            background-color: rgba(99, 102, 241, 0.1) !important;
+            /* Fundo de seleção com menos opacidade */
         }
 
         body.dark-mode tbody tr.bg-indigo-50:hover {
-            background-color: rgba(99, 102, 241, 0.25) !important;
+            background-color: rgba(99, 102, 241, 0.15) !important;
         }
 
+        /* Ajuste de links e ícones interativos */
         body.dark-mode .text-indigo-600 {
             color: #818cf8 !important;
         }
@@ -328,18 +347,21 @@
         body.dark-mode .text-indigo-600:hover,
         body.dark-mode .hover\:text-indigo-800:hover,
         body.dark-mode .copy-btn:hover {
-            color: #c7d2fe !important;
+            color: #a5b4fc !important;
         }
 
+        /* Textos secundários (mais neutros) */
         body.dark-mode .text-gray-500,
         body.dark-mode .text-gray-600,
         body.dark-mode .text-gray-700 {
-            color: #9ca3af !important;
+            color: #94a3b8 !important;
+            /* slate-400 */
         }
 
         body.dark-mode .text-gray-800,
         body.dark-mode .text-gray-900 {
-            color: #ffffff !important;
+            color: #f1f5f9 !important;
+            /* slate-100 */
         }
 
         body.dark-mode h1,
@@ -347,21 +369,25 @@
         body.dark-mode h3,
         body.dark-mode strong,
         body.dark-mode .font-bold {
-            color: #f3f4f6 !important;
+            color: #f8fafc !important;
         }
 
+        /* Inputs, textareas e selects */
         body.dark-mode input,
         body.dark-mode textarea,
         body.dark-mode select {
-            background-color: #374151 !important;
-            border-color: #4b5563 !important;
-            color: #fff !important;
+            background-color: #475569 !important;
+            /* slate-600 */
+            border-color: #64748b !important;
+            /* slate-500 */
+            color: #f8fafc !important;
         }
 
         body.dark-mode input::placeholder {
-            color: #6b7280;
+            color: #94a3b8 !important;
         }
 
+        /* Bordas gerais */
         body.dark-mode .border,
         body.dark-mode .border-t,
         body.dark-mode .border-b,
@@ -369,143 +395,133 @@
         body.dark-mode .border-r,
         body.dark-mode .border-gray-200,
         body.dark-mode .border-gray-300 {
-            border-color: #374151 !important;
-        }
-
-        .theme-icon-container {
-            position: relative;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-        }
-
-        .rotate-icon {
-            transform: rotate(360deg) scale(1.2);
-        }
-
-        /* --- PERSONALIZAÇÃO DA BARRA DE ROLAGEM --- */
-        html {
-            scrollbar-width: thin;
-            scrollbar-color: #6d7683 #f3f4f6;
-        }
-
-        body.dark-mode {
-            scrollbar-color: #4b5563 #111827;
-        }
-
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f3f4f6;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background-color: #9ca3af;
-            border-radius: 4px;
-            border: 2px solid #f3f4f6;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background-color: #6b7280;
-        }
-
-        body.dark-mode ::-webkit-scrollbar-track {
-            background: #111827;
-        }
-
-        body.dark-mode ::-webkit-scrollbar-thumb {
-            background-color: #374151;
-            border: 2px solid #111827;
-        }
-
-        body.dark-mode ::-webkit-scrollbar-thumb:hover {
-            background-color: #4b5563;
-        }
-
-        /* --- ESTILIZAÇÃO AVANÇADA DE CHECKBOX --- */
-        input[type="checkbox"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 1rem;
-            height: 1rem;
-            background-color: #fff;
-            border: 1px solid #d1d5db;
-            border-radius: 0.25rem;
-            display: inline-grid;
-            place-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            position: relative;
-        }
-
-        input[type="checkbox"]::before {
-            content: "";
-            width: 0.65em;
-            height: 0.65em;
-            transform: scale(0);
-            transition: 120ms transform ease-in-out;
-            box-shadow: inset 1em 1em white;
-            transform-origin: center;
-            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-        }
-
-        input[type="checkbox"]:checked {
-            background-color: #4f46e5;
-            border-color: #4f46e5;
-        }
-
-        input[type="checkbox"]:checked::before {
-            transform: scale(1);
-        }
-
-        body.dark-mode input[type="checkbox"] {
-            background-color: #555e6d;
-            border-color: #9fabbd;
-        }
-
-        body.dark-mode input[type="checkbox"]:hover {
-            border-color: #6b7280;
-        }
-
-        body.dark-mode input[type="checkbox"]:checked {
-            background-color: #818cf8;
-            border-color: #818cf8;
+            border-color: #475569 !important;
+            /* slate-600 */
         }
 
         body.dark-mode tbody tr,
         body.dark-mode thead tr {
-            border-bottom-color: #374151 !important;
+            border-bottom-color: #475569 !important;
         }
 
         body.dark-mode tbody tr td,
         body.dark-mode tbody tr td .text-gray-500 {
-            color: #ffffff !important;
+            color: #cbd5e1 !important;
         }
 
         body.dark-mode #clear-filter-btn:hover {
-            background-color: #374151 !important;
-            color: #f3f4f6 !important;
-        }
-
-        .copy-btn ion-icon,
-        button[title^="Copiar"] ion-icon {
-            font-size: 15px !important;
+            background-color: #475569 !important;
+            color: #f8fafc !important;
         }
 
         body.dark-mode .text-green-700 {
             color: #4ade80 !important;
-            text-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+            text-shadow: none;
+            /* Removido o glow forte que cansa a vista */
         }
 
         body.dark-mode .text-red-700 {
             color: #f87171 !important;
+        }
+
+        /* --- AJUSTE DO QUILL (EDITOR DE TEXTO) NO MODO ESCURO --- */
+        body.dark-mode .ql-toolbar {
+            background-color: #334155;
+            border-color: #475569;
+        }
+
+        body.dark-mode .ql-container {
+            border-color: #475569;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .ql-stroke {
+            stroke: #cbd5e1;
+        }
+
+        body.dark-mode .ql-fill {
+            fill: #cbd5e1;
+        }
+
+        body.dark-mode .ql-picker-label {
+            color: #cbd5e1;
+        }
+
+        body.dark-mode .ql-editor.ql-blank::before {
+            color: #94a3b8 !important;
+            font-style: italic;
+        }
+
+        /* --- PERSONALIZAÇÃO DA BARRA DE ROLAGEM MODO ESCURO --- */
+        body.dark-mode {
+            scrollbar-color: #475569 #1e293b;
+        }
+
+        body.dark-mode ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        body.dark-mode ::-webkit-scrollbar-thumb {
+            background-color: #475569;
+            border: 2px solid #1e293b;
+        }
+
+        body.dark-mode ::-webkit-scrollbar-thumb:hover {
+            background-color: #64748b;
+        }
+
+        /* --- CHECKBOX MODO ESCURO --- */
+        body.dark-mode input[type="checkbox"] {
+            background-color: #1e293b !important;
+            /* Cor de fundo igual a da tabela */
+            border-color: #64748b !important;
+            /* Cor da borda mais suave */
+            accent-color: #818cf8;
+            /* Altera a cor de marcação nativa do navegador */
+        }
+
+        body.dark-mode input[type="checkbox"]:hover {
+            border-color: #94a3b8 !important;
+            background-color: #334155 !important;
+        }
+
+        body.dark-mode input[type="checkbox"]:checked {
+            background-color: #818cf8 !important;
+            border-color: #818cf8 !important;
+        }
+
+        /* --- ALINHAMENTO PERFEITO DOS ÍCONES DA BARRA LATERAL --- */
+        #sidebar .min-w-\[40px\] {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center;
+        }
+
+        /* --- ANIMAÇÃO DO ÍCONE DE TEMA (SOL/LUA) --- */
+        @keyframes themeSwitchAnim {
+            0% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            50% {
+                transform: scale(0.6) rotate(180deg);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1) rotate(360deg);
+                opacity: 1;
+            }
+        }
+
+        .rotate-icon {
+            /* O JS já aplica essa classe por 500ms no clique */
+            animation: themeSwitchAnim 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        /* Deixa a troca de cor (amarelo/roxo) mais suave */
+        #theme-icon {
+            transition: color 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -2490,7 +2506,9 @@
                 }
 
                 let buttonsHTML = `<div class="flex items-center">`;
-                buttonsHTML += `<button onclick="changePage(${currentPage - 1})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>`;
+                buttonsHTML += `<button onclick="changePage(${currentPage - 1})" class="flex items-center justify-center px-2 py-1 mx-1 rounded-md transition-colors duration-200 group ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-200 hover:text-gray-900'}" title="Anterior" ${currentPage === 1 ? 'disabled' : ''}>
+    <svg class="w-5 h-5 stroke-2 transition-all duration-200 group-hover:stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+</button>`;
 
                 let startPage = Math.max(1, currentPage - 2);
                 let endPage = Math.min(totalPages, currentPage + 2);
@@ -2504,9 +2522,11 @@
 
                 for (let i = startPage; i <= endPage; i++) {
                     if (i === currentPage) {
-                        buttonsHTML += `<button class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-indigo-600 text-white">${i}</button>`;
+                        // Botão da página ATUAL
+                        buttonsHTML += `<button class="px-3 py-1 mx-1 rounded-md text-sm font-bold bg-indigo-600 text-white">${i}</button>`;
                     } else {
-                        buttonsHTML += `<button onclick="changePage(${i})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-white text-gray-700 hover:bg-gray-100">${i}</button>`;
+                        // Botões das OUTRAS páginas (agora com hover colorido e texto branco)
+                        buttonsHTML += `<button onclick="changePage(${i})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium transition-all duration-200 bg-white text-gray-700 hover:bg-indigo-500 hover:text-white hover:[-webkit-text-stroke:0.5px_currentColor]">${i}</button>`;
                     }
                 }
 
@@ -2517,7 +2537,9 @@
                     buttonsHTML += `<button onclick="changePage(${totalPages})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium bg-white text-gray-700 hover:bg-gray-100">${totalPages}</button>`;
                 }
 
-                buttonsHTML += `<button onclick="changePage(${currentPage + 1})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-100'}" ${currentPage === totalPages ? 'disabled' : ''}>Próximo</button>`;
+                buttonsHTML += `<button onclick="changePage(${currentPage + 1})" class="flex items-center justify-center px-2 py-1 mx-1 rounded-md transition-colors duration-200 group ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-200 hover:text-gray-900'}" title="Próximo" ${currentPage === totalPages ? 'disabled' : ''}>
+    <svg class="w-5 h-5 stroke-2 transition-all duration-200 group-hover:stroke-[3.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+</button>`;
                 buttonsHTML += `</div>`;
 
                 paginationControls.innerHTML = `${infoHTML} ${buttonsHTML}`;

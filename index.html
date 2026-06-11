@@ -18,20 +18,82 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
     <style>
-        /* Estilos personalizados */
+        /* --- Tema Global Sincronizado com CNPJá --- */
         :root {
-            --primary-color: #4f46e5;
-            --secondary-color: #6366f1;
-            --background-color: #f3f4f6;
-            --sidebar-bg: #1f2937;
-            --sidebar-text: #d1d5db;
-            --sidebar-hover: #374151;
-            --table-header: #e5e7eb;
+            /* Cores padrão (Modo Claro CNPJá) */
+            --primary-color: #00b4d8;
+            /* Cyan característico do CNPJá */
+            --secondary-color: #0096b4;
+            --background-color: #f4f6f8;
+            --sidebar-bg: #0e151c;
+            /* Sidebar escura mesmo no modo claro para padrão CNPJá */
+            --sidebar-text: #f8fafc;
+            --sidebar-hover: #1c2937;
+            --table-header: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--background-color);
+            color: var(--text-primary);
+            font-size: 14px;
+            /* Tamanho base CNPJá */
+        }
+
+        table {
+            font-size: 14px;
+        }
+
+        /* Override Global das cores "Indigo" do Tailwind para o "Cyan/Blue" do CNPJá */
+        .bg-indigo-600 {
+            background-color: #00b4d8 !important;
+            border-color: #00b4d8 !important;
+        }
+
+        .bg-indigo-600:hover {
+            background-color: #0096b4 !important;
+        }
+
+        .bg-indigo-500 {
+            background-color: #00b4d8 !important;
+        }
+
+        .bg-indigo-500:hover {
+            background-color: #0096b4 !important;
+        }
+
+        .text-indigo-600 {
+            color: #00b4d8 !important;
+        }
+
+        .text-indigo-600:hover {
+            color: #0096b4 !important;
+        }
+
+        .text-indigo-500 {
+            color: #00b4d8 !important;
+        }
+
+        .text-indigo-400 {
+            color: #38bdf8 !important;
+        }
+
+        .border-indigo-500 {
+            border-color: #00b4d8 !important;
+        }
+
+        .focus\:ring-indigo-500:focus {
+            --tw-ring-color: #00b4d8 !important;
+        }
+
+        .focus\:border-indigo-500:focus {
+            border-color: #00b4d8 !important;
+        }
+
+        .bg-indigo-50 {
+            background-color: #e6f7fa !important;
         }
 
         /* --- Estilos do Popover e Rich Text --- */
@@ -58,31 +120,31 @@
 
         /* Ajuste do Quill para o seu Dark Mode */
         body.dark-mode .ql-toolbar {
-            background-color: #374151;
-            border-color: #4b5563;
+            background-color: #16202b;
+            border-color: #233240;
         }
 
         body.dark-mode .ql-container {
-            border-color: #4b5563;
-            color: #fff;
+            border-color: #233240;
+            background-color: #0e151c;
+            color: #f8fafc;
         }
 
         body.dark-mode .ql-stroke {
-            stroke: #d1d5db;
+            stroke: #8b9bb4;
         }
 
         body.dark-mode .ql-fill {
-            fill: #d1d5db;
+            fill: #8b9bb4;
         }
 
         body.dark-mode .ql-picker-label {
-            color: #d1d5db;
+            color: #8b9bb4;
         }
 
         /* Cor do placeholder do Quill no modo escuro */
         body.dark-mode .ql-editor.ql-blank::before {
-            color: #9ca3af !important;
-            /* Um cinza claro para dar contraste no fundo escuro */
+            color: #8b9bb4 !important;
             font-style: italic;
         }
 
@@ -153,6 +215,7 @@
             border: none;
             cursor: pointer;
             color: #9ca3af;
+            transition: color 0.2s;
         }
 
         .copy-btn:hover {
@@ -281,87 +344,82 @@
             }
         }
 
-        /* --- ESTILOS DO MODO ESCURO (DARK MODE) - SUAVE / CONFORTÁVEL --- */
-        /* --- ESTILOS DO MODO ESCURO (DARK MODE) - SUAVE / CONFORTÁVEL --- */
+        /* --- ESTILOS DO MODO ESCURO (DARK MODE) 100% CNPJÁ --- */
         body.dark-mode {
-            background-color: #1e293b;
-            /* Fundo principal mais suave (slate-800) */
-            color: #e2e8f0;
-            /* Texto base não tão branco (slate-200) */
-            --sidebar-bg: #334155;
-            /* Iguala a barra lateral */
+            background-color: #0e151c;
+            /* Fundo principal exato do CNPJá */
+            color: #f8fafc;
+            --sidebar-bg: #0e151c;
+            /* Sidebar mesma cor do fundo principal */
             color-scheme: dark;
-            /* Pulo do gato: escurece nativamente checkboxes e scrollbars no navegador */
         }
 
         body.dark-mode #sidebar .hover\:bg-gray-700:hover {
-            background-color: #475569 !important;
+            background-color: #1c2937 !important;
         }
 
+        /* Cards e painéis principais (mesma cor dos cards do CNPJá) */
         body.dark-mode .bg-white {
-            background-color: #334155 !important;
-            /* Fundo dos cards (slate-700) */
-            color: #e2e8f0;
-            border-color: #475569;
-            /* slate-600 */
+            background-color: #16202b !important;
+            color: #f8fafc;
+            border-color: #233240;
         }
 
+        /* Fundo das views ocultas para igualar o layout */
         body.dark-mode .bg-gray-50,
         body.dark-mode .bg-gray-100,
         body.dark-mode .bg-gray-200 {
-            background-color: #1e293b !important;
+            background-color: #0e151c !important;
             color: #cbd5e1;
-            /* slate-300 */
         }
 
-        body.dark-mode thead tr {
-            background-color: #0f172a !important;
-            /* Cabeçalho da tabela um tom mais escuro (slate-900) */
+        /* O header superior do sistema se mescla com o fundo, assim como no CNPJá */
+        body.dark-mode header.bg-white {
+            background-color: #0e151c !important;
+            border-bottom: 1px solid #233240 !important;
+            box-shadow: none !important;
+        }
+
+        /* Tabelas com as mesmas cores e linhas */
+        body.dark-mode thead tr,
+        body.dark-mode thead {
+            background-color: #16202b !important;
+            border-bottom: 1px solid #233240 !important;
+        }
+
+        body.dark-mode tbody tr {
+            background-color: #16202b !important;
+            border-bottom-color: #233240 !important;
         }
 
         body.dark-mode tbody tr:hover {
-            background-color: #475569 !important;
-            /* Hover mais suave na tabela (slate-600) */
+            background-color: #1c2937 !important;
         }
 
         body.dark-mode .copyable-cell:hover {
-            background-color: #64748b !important;
-            /* slate-500 */
-            color: #f8fafc !important;
+            background-color: #233240 !important;
+            color: #ffffff !important;
         }
 
         body.dark-mode .bg-indigo-50 {
-            background-color: rgba(99, 102, 241, 0.1) !important;
-            /* Fundo de seleção com menos opacidade */
+            background-color: #1c2937 !important;
         }
 
         body.dark-mode tbody tr.bg-indigo-50:hover {
-            background-color: rgba(99, 102, 241, 0.15) !important;
+            background-color: #233240 !important;
         }
 
-        /* Ajuste de links e ícones interativos */
-        body.dark-mode .text-indigo-600 {
-            color: #818cf8 !important;
-        }
-
-        body.dark-mode .text-indigo-600:hover,
-        body.dark-mode .hover\:text-indigo-800:hover,
-        body.dark-mode .copy-btn:hover {
-            color: #a5b4fc !important;
-        }
-
-        /* Textos secundários (mais neutros) */
+        /* Cores de Texto Idênticas */
         body.dark-mode .text-gray-500,
         body.dark-mode .text-gray-600,
         body.dark-mode .text-gray-700 {
-            color: #94a3b8 !important;
-            /* slate-400 */
+            color: #8b9bb4 !important;
+            /* Cor exata dos textos secundários */
         }
 
         body.dark-mode .text-gray-800,
         body.dark-mode .text-gray-900 {
-            color: #f1f5f9 !important;
-            /* slate-100 */
+            color: #ffffff !important;
         }
 
         body.dark-mode h1,
@@ -370,25 +428,22 @@
         body.dark-mode strong,
         body.dark-mode .font-bold {
             color: #ffffff !important;
-            /* Branco puro */
         }
 
-        /* Inputs, textareas e selects */
+        /* Inputs de formulário idênticos à barra de busca do CNPJá */
         body.dark-mode input,
         body.dark-mode textarea,
         body.dark-mode select {
-            background-color: #475569 !important;
-            /* slate-600 */
-            border-color: #64748b !important;
-            /* slate-500 */
+            background-color: #0e151c !important;
+            border-color: #233240 !important;
             color: #f8fafc !important;
         }
 
         body.dark-mode input::placeholder {
-            color: #94a3b8 !important;
+            color: #8b9bb4 !important;
         }
 
-        /* Bordas gerais */
+        /* Cores das linhas e divisórias */
         body.dark-mode .border,
         body.dark-mode .border-t,
         body.dark-mode .border-b,
@@ -396,116 +451,159 @@
         body.dark-mode .border-r,
         body.dark-mode .border-gray-200,
         body.dark-mode .border-gray-300 {
-            border-color: #475569 !important;
-            /* slate-600 */
-        }
-
-        body.dark-mode tbody tr,
-        body.dark-mode thead tr {
-            border-bottom-color: #475569 !important;
+            border-color: #233240 !important;
         }
 
         body.dark-mode tbody tr td,
         body.dark-mode tbody tr td .text-gray-500 {
-            color: #f1f5f9 !important;
-            /* Um cinza quase branco, que dá ótimo contraste */
+            color: #e2e8f0 !important;
         }
 
         body.dark-mode thead tr th,
         body.dark-mode thead tr th .text-gray-600 {
             color: #ffffff !important;
-            /* Títulos da tabela em branco puro */
+            font-weight: 600 !important;
         }
 
         body.dark-mode #clear-filter-btn:hover {
-            background-color: #475569 !important;
+            background-color: #1c2937 !important;
             color: #f8fafc !important;
         }
 
-        body.dark-mode .text-green-700 {
-            color: #4ade80 !important;
+        /* Cor de Status Ativa/Positiva (CNPJá) */
+        body.dark-mode .text-green-700,
+        body.dark-mode .text-green-600,
+        body.dark-mode .text-green-500 {
+            color: #10b981 !important;
             text-shadow: none;
-            /* Removido o glow forte que cansa a vista */
         }
 
-        body.dark-mode .text-red-700 {
-            color: #f87171 !important;
+        body.dark-mode .bg-green-500 {
+            background-color: #10b981 !important;
+            border-color: #059669 !important;
         }
 
-        /* --- AJUSTE DO QUILL (EDITOR DE TEXTO) NO MODO ESCURO --- */
-        body.dark-mode .ql-toolbar {
-            background-color: #334155;
-            border-color: #475569;
+        body.dark-mode .text-red-700,
+        body.dark-mode .text-red-600,
+        body.dark-mode .text-red-500 {
+            color: #ef4444 !important;
         }
 
-        body.dark-mode .ql-container {
-            border-color: #475569;
-            color: #e2e8f0;
+        /* Scrollbars customizadas - Exato do Dark Mode CNPJá */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
         }
 
-        body.dark-mode .ql-stroke {
-            stroke: #cbd5e1;
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
 
-        body.dark-mode .ql-fill {
-            fill: #cbd5e1;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
         }
 
-        body.dark-mode .ql-picker-label {
-            color: #cbd5e1;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
         }
 
-        body.dark-mode .ql-editor.ql-blank::before {
-            color: #94a3b8 !important;
-            font-style: italic;
+        body.dark-mode .custom-scrollbar {
+            scrollbar-color: #233240 transparent;
         }
 
-        /* --- PERSONALIZAÇÃO DA BARRA DE ROLAGEM MODO ESCURO --- */
+        body.dark-mode .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #233240;
+            border-radius: 4px;
+        }
+
         body.dark-mode {
-            scrollbar-color: #475569 #1e293b;
+            scrollbar-color: #233240 #0e151c;
+        }
+
+        body.dark-mode ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
 
         body.dark-mode ::-webkit-scrollbar-track {
-            background: #1e293b;
+            background: #0e151c;
         }
 
         body.dark-mode ::-webkit-scrollbar-thumb {
-            background-color: #475569;
-            border: 2px solid #1e293b;
+            background-color: #233240;
+            border-radius: 4px;
         }
 
         body.dark-mode ::-webkit-scrollbar-thumb:hover {
-            background-color: #64748b;
+            background-color: #324456;
         }
 
-        /* --- CHECKBOX MODO ESCURO --- */
         body.dark-mode input[type="checkbox"] {
-            background-color: #1e293b !important;
-            /* Cor de fundo igual a da tabela */
-            border-color: #64748b !important;
-            /* Cor da borda mais suave */
-            accent-color: #818cf8;
-            /* Altera a cor de marcação nativa do navegador */
+            background-color: #0e151c !important;
+            border-color: #233240 !important;
+            accent-color: #00b4d8;
         }
 
         body.dark-mode input[type="checkbox"]:hover {
-            border-color: #94a3b8 !important;
-            background-color: #334155 !important;
+            border-color: #8b9bb4 !important;
+            background-color: #16202b !important;
         }
 
         body.dark-mode input[type="checkbox"]:checked {
-            background-color: #818cf8 !important;
-            border-color: #818cf8 !important;
+            background-color: #00b4d8 !important;
+            border-color: #00b4d8 !important;
         }
 
-        /* --- ALINHAMENTO PERFEITO DOS ÍCONES DA BARRA LATERAL --- */
+        /* Popovers e Modais no Dark Mode */
+        body.dark-mode #obs-popover {
+            background-color: #16202b !important;
+            border-color: #233240 !important;
+        }
+
+        body.dark-mode #obs-popover>div:first-child {
+            background-color: #0e151c !important;
+            border-bottom-color: #233240 !important;
+        }
+
+        body.dark-mode .modal>div>div,
+        body.dark-mode .modal>div {
+            background-color: #16202b !important;
+            border: 1px solid #233240;
+        }
+
+        body.dark-mode .modal header,
+        body.dark-mode .modal>div>div:first-child,
+        body.dark-mode #infoModalHeader {
+            border-bottom-color: #233240 !important;
+        }
+
+        body.dark-mode #infoModalLeftActions,
+        body.dark-mode #infoModalContent+div {
+            background-color: #0e151c !important;
+            border-top-color: #233240 !important;
+        }
+
+        /* Ajuste do container superior da busca de CNPJ */
+        body.dark-mode .bg-slate-800 {
+            background-color: #0e151c !important;
+        }
+
+        body.dark-mode .border-slate-700 {
+            border-color: #233240 !important;
+        }
+
+        body.dark-mode .bg-slate-900 {
+            background-color: #0b1015 !important;
+        }
+
         #sidebar .min-w-\[40px\] {
             display: flex !important;
             justify-content: center !important;
             align-items: center;
         }
 
-        /* --- ANIMAÇÃO DO ÍCONE DE TEMA (SOL/LUA) --- */
         @keyframes themeSwitchAnim {
             0% {
                 transform: scale(1) rotate(0deg);
@@ -523,11 +621,9 @@
         }
 
         .rotate-icon {
-            /* O JS já aplica essa classe por 500ms no clique */
             animation: themeSwitchAnim 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        /* Deixa a troca de cor (amarelo/roxo) mais suave */
         #theme-icon {
             transition: color 0.3s ease-in-out;
         }
@@ -550,8 +646,8 @@
     <div id="login-view" class="hidden flex items-center justify-center min-h-screen">
         <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-xl w-full max-w-md">
             <div class="text-center">
-                <h1 id="login-title" class="text-3xl font-bold text-gray-800" style="color: #3b82f6;">Gestão de
-                    Fornecedores</h1>
+                <h1 id="login-title" class="text-3xl font-bold text-gray-800" style="color: var(--primary-color);">
+                    Gestão de Fornecedores</h1>
                 <p id="login-subtitle" class="mt-2 text-gray-500">Acesse seu painel de controle</p>
             </div>
 
@@ -562,7 +658,7 @@
                             <ion-icon name="mail-outline" class="text-gray-400"></ion-icon>
                         </span>
                         <input type="email" id="email-input" placeholder="Seu e-mail"
-                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             required>
                     </div>
                 </div>
@@ -573,7 +669,7 @@
                             <ion-icon name="lock-closed-outline" class="text-gray-400"></ion-icon>
                         </span>
                         <input type="password" id="password-input" placeholder="Sua senha"
-                            class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             required>
                         <button type="button" id="password-toggle"
                             class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
@@ -586,17 +682,17 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <input id="remember-me" name="remember-me" type="checkbox"
-                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                         <label for="remember-me" class="ml-2 block text-sm text-gray-900">Lembrar de mim</label>
                     </div>
                     <div class="text-sm">
-                        <a href="#" class="font-medium text-blue-600 hover:text-blue-500">Esqueceu a senha?</a>
+                        <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">Esqueceu a senha?</a>
                     </div>
                 </div>
 
                 <div>
                     <button type="submit" id="auth-button"
-                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Entrar
                     </button>
                 </div>
@@ -666,10 +762,11 @@
             </div>
         </aside>
 
-        <div class="flex-1 flex flex-col">
-            <header class="bg-white shadow-sm p-4 h-16 flex items-center justify-between z-10">
-                <h1 id="header-title" class="text-2xl font-bold text-gray-800">Gerenciamento de Fornecedores</h1>
-                <div class="flex items-center space-x-4">
+        <div class="flex-1 flex flex-col min-w-0">
+            <header class="bg-white shadow-sm p-4 h-16 flex items-center justify-between z-10 flex-shrink-0">
+                <h1 id="header-title" class="text-2xl font-bold text-gray-800 truncate">Gerenciamento de Fornecedores
+                </h1>
+                <div class="flex items-center space-x-4 flex-shrink-0">
                     <div id="header-search-container" class="w-full max-w-xs hidden">
                         <button id="new-cnpj-search-btn"
                             class="w-full bg-indigo-600 text-white px-4 py-2 text-sm rounded-md hover:bg-indigo-700"
@@ -691,9 +788,10 @@
                 </div>
             </header>
 
-            <main id="main-view" class="flex-1 p-6 overflow-y-auto">
+            <main id="main-view" class="flex-1 p-6 overflow-y-auto min-h-0">
                 <div class="bg-white p-6 rounded-xl shadow-md h-full flex flex-col">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                    <div
+                        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 flex-shrink-0">
                         <div class="flex items-center space-x-4 flex-shrink-0">
                             <h2 class="text-xl font-semibold text-gray-700">Lista de Fornecedores</h2>
                             <button id="open-export-modal-btn"
@@ -721,8 +819,7 @@
                                     </li>
                                     <li data-value="cnpj"
                                         class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">CNPJ /
-                                        CPF
-                                    </li>
+                                        CPF</li>
                                     <li data-value="name"
                                         class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Nome
                                     </li>
@@ -747,16 +844,16 @@
                                         stroke-linecap="round" />
                                 </svg>
                             </button>
-                            <div class="relative flex-grow">
+                            <div class="relative flex-grow max-w-md">
                                 <input type="text" id="supplier-search-input" placeholder="Buscar... (CTRL+F)"
-                                    class="w-full lg:w-96 pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                 <ion-icon name="search-outline"
                                     class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
                             </div>
                         </div>
                     </div>
 
-                    <div class="table-container">
+                    <div class="table-container min-h-0 custom-scrollbar">
                         <table class="min-w-full bg-white">
                             <thead class="bg-gray-100" style="background-color: var(--table-header);">
                                 <tr>
@@ -789,7 +886,8 @@
                         </table>
                     </div>
                     <div id="pagination-controls"
-                        class="flex flex-wrap justify-center items-center gap-4 mt-auto pt-4 border-t"></div>
+                        class="flex flex-wrap justify-center items-center gap-4 mt-auto pt-4 border-t flex-shrink-0">
+                    </div>
                 </div>
             </main>
 
@@ -801,13 +899,11 @@
                     <div class="border-b border-gray-200 mt-4">
                         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                             <button id="tab-by-cep"
-                                class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600">
-                                Por CEP
-                            </button>
+                                class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600">Por
+                                CEP</button>
                             <button id="tab-by-address"
-                                class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                                Por Endereço
-                            </button>
+                                class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Por
+                                Endereço</button>
                         </nav>
                     </div>
 
@@ -864,8 +960,9 @@
                 </div>
             </div>
 
-            <div id="cnpj-search-view" class="flex-1 p-6 overflow-y-auto hidden">
-                <div id="cnpj-search-container" class="bg-white p-8 rounded-xl shadow-sm mb-6 max-w-xl mx-auto mt-10">
+            <div id="cnpj-search-view" class="flex-1 p-6 overflow-y-auto hidden bg-gray-50">
+                <div id="cnpj-search-container"
+                    class="bg-white p-8 rounded-xl border border-gray-200 mb-6 max-w-xl mx-auto mt-10">
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">Consultar CNPJ</h2>
                     <p class="text-gray-500">Busque por um CNPJ para ver os detalhes da empresa. (CTRL+D)</p>
                     <form id="cnpj-search-form" class="mt-6">
@@ -884,10 +981,9 @@
                         <p id="view-cnpj-error" class="text-sm text-red-500 mt-2 hidden"></p>
                     </form>
                 </div>
-                <div id="cnpj-result" class="h-full">
+                <div id="cnpj-result" class="h-auto">
                 </div>
             </div>
-
 
             <div id="settings-view" class="flex-1 p-6 overflow-y-auto hidden">
                 <div class="bg-white p-8 rounded-xl shadow-sm max-w-2xl mx-auto">
@@ -920,16 +1016,15 @@
                                     <div class="flex items-center">
                                         <input id="select-mode-page" name="select-mode" type="radio" value="page"
                                             class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                                        <label for="select-mode-page" class="ml-3 block text-sm text-gray-700">
-                                            Selecionar apenas os itens da página atual
-                                        </label>
+                                        <label for="select-mode-page"
+                                            class="ml-3 block text-sm text-gray-700">Selecionar apenas os itens da
+                                            página atual</label>
                                     </div>
                                     <div class="flex items-center">
                                         <input id="select-mode-all" name="select-mode" type="radio" value="all"
                                             class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                                        <label for="select-mode-all" class="ml-3 block text-sm text-gray-700">
-                                            Selecionar todos os itens (em todas as páginas)
-                                        </label>
+                                        <label for="select-mode-all" class="ml-3 block text-sm text-gray-700">Selecionar
+                                            todos os itens (em todas as páginas)</label>
                                     </div>
                                 </div>
                             </fieldset>
@@ -952,7 +1047,7 @@
     </div>
 
     <button id="add-supplier-btn"
-        class="fixed bottom-8 right-8 bg-indigo-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-110 z-30"
+        class="fixed bottom-8 right-8 bg-indigo-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-indigo-700 transition-transform z-30"
         style="background-color: var(--primary-color);" title="Adicionar Fornecedor (CTRL+G)">
         <ion-icon name="add-outline" class="text-3xl"></ion-icon>
     </button>
@@ -1089,7 +1184,8 @@
             </button>
         </div>
         <div id="obs-popover-content"
-            class="p-4 overflow-y-auto rich-text-content text-sm text-gray-700 dark:text-gray-200"></div>
+            class="p-4 overflow-y-auto rich-text-content text-sm text-gray-700 dark:text-gray-200 custom-scrollbar">
+        </div>
     </div>
 
     <div id="toast"
@@ -1209,7 +1305,7 @@
                     <ion-icon name="close-outline" class="text-3xl"></ion-icon>
                 </button>
             </div>
-            <div id="importReportContent" class="mt-2 text-sm text-gray-600 max-h-80 overflow-y-auto">
+            <div id="importReportContent" class="mt-2 text-sm text-gray-600 max-h-80 overflow-y-auto custom-scrollbar">
             </div>
             <div class="mt-6 flex justify-end">
                 <button id="okImportReportBtn"
@@ -1224,7 +1320,7 @@
             class="bg-gray-50 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform transition-all duration-300 scale-95 opacity-0">
             <div id="infoModalHeader" class="p-5 border-b border-gray-200 flex justify-between items-start">
             </div>
-            <div id="infoModalContent" class="p-6 space-y-1 overflow-y-auto">
+            <div id="infoModalContent" class="p-6 space-y-1 overflow-y-auto custom-scrollbar">
             </div>
             <div
                 class="p-4 bg-gray-100 border-t border-gray-200 flex justify-between items-center rounded-b-xl mt-auto">
@@ -1238,13 +1334,11 @@
 
 
     <script type="module">
-        // UPDATED: Using a newer version of Firebase SDK (v10.12.2)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, query, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyB5tdaJvlB1UkFemO6X_D19rbzZgiR3b0Q",
             authDomain: "cgf-web.firebaseapp.com",
@@ -1254,24 +1348,20 @@
             appId: "1:546201159693:web:973e7c33aa165543b76d44"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- Colocar toda a lógica da aplicação dentro do DOMContentLoaded ---
         document.addEventListener('DOMContentLoaded', () => {
 
-            // --- Proxy para contornar problemas de CORS (usando um novo proxy) ---
             const corsProxy = 'https://api.codetabs.com/v1/proxy/?quest=';
-            // --- Lógica do Tema Escuro (Dark Mode) ---
+
             const toggleThemeBtn = document.getElementById('toggle-theme-btn');
             const themeIcon = document.getElementById('theme-icon');
             const themeIconWrapper = document.getElementById('theme-icon-wrapper');
             const themeText = document.getElementById('theme-text');
             const body = document.body;
 
-            // Função para aplicar o tema
             const applyTheme = (isDark) => {
                 if (isDark) {
                     body.classList.add('dark-mode');
@@ -1288,7 +1378,6 @@
                 }
             };
 
-            // Carregar preferência salva
             const savedTheme = localStorage.getItem('theme');
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -1895,6 +1984,13 @@
             };
 
             function switchView(viewName) {
+                // --- ADICIONE ESTE BLOCO AQUI ---
+                if (viewName !== 'cnpj' || !cnpjSearchPerformed) {
+                    document.querySelector('header').classList.remove('hidden');
+                } else {
+                    document.querySelector('header').classList.add('hidden');
+                }
+                // -------------------------------
                 Object.values(views).forEach(view => {
                     view.element.classList.add('hidden');
                     view.button.classList.remove('bg-indigo-600', 'text-white');
@@ -1933,7 +2029,16 @@
 
             showMainViewBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('main'); });
             showCepViewBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('cep'); });
-            showCnpjViewBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('cnpj'); });
+            showCnpjViewBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                // Se o usuário clicar no ícone de CNPJ na barra lateral enquanto já está vendo um resultado, reseta a busca
+                if (!cnpjSearchView.classList.contains('hidden') && cnpjSearchPerformed) {
+                    newCnpjSearchBtn.click();
+                } else {
+                    switchView('cnpj');
+                }
+            });
             showSettingsViewBtn.addEventListener('click', (e) => { e.preventDefault(); switchView('settings'); });
 
             // --- Lógica da Sidebar ---
@@ -2075,7 +2180,7 @@
                     if (supplierId) {
                         const supplierDocRef = doc(db, 'suppliers_public', supplierId);
                         await updateDoc(supplierDocRef, supplierData);
-                        showToast('Fornecedor atualizado com sucesso!', 'success');
+                        showToast('Fornecedor updated com sucesso!', 'success');
                     } else {
                         await addDoc(collection(db, 'suppliers_public'), supplierData);
                         showToast('Fornecedor cadastrado com sucesso!', 'success');
@@ -2171,7 +2276,6 @@
                             const response = await fetch(`https://open.cnpja.com/office/${rawValue}`);
                             if (!response.ok) throw { status: response.status };
                             const data = await response.json();
-                            // A API do CNPJá guarda a razão social dentro do objeto "company" com a chave "name"
                             nameInput.value = data.company?.name || '';
                             nameInput.readOnly = false;
                             nameInput.classList.remove('bg-gray-100');
@@ -2336,15 +2440,11 @@
                             const rawObs = supplier.observations || '';
                             const tempDiv = document.createElement('div');
 
-                            // Substitui o fechamento de blocos por quebra de linha real
                             tempDiv.innerHTML = rawObs.replace(/<\/(p|div|li)>/gi, '\n').replace(/<br\s*\/?>/gi, '\n');
 
                             const fullText = tempDiv.textContent || '';
-
-                            // Separa as linhas e remove as vazias
                             const linhas = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
-                            // Monta o resumo unindo até as duas primeiras linhas
                             let textoResumo = '';
                             if (linhas.length === 1) {
                                 textoResumo = linhas[0];
@@ -2355,7 +2455,6 @@
                             let obsHtml = `<td class="py-1 px-4 text-sm text-gray-500 max-w-[300px] truncate copyable-cell" title="Sem observações"></td>`;
 
                             if (textoResumo.length > 0) {
-                                // Exige o botão se: o resumo passar de 40 letras, tiver mais de 2 linhas, ou tiver listas/negrito
                                 if (textoResumo.length > 40 || linhas.length > 2 || rawObs.includes('<ul>') || rawObs.includes('<ol>') || rawObs.includes('<strong>')) {
                                     obsHtml = `
                                         <td class="py-1 px-4 text-sm text-gray-500 max-w-[300px]">
@@ -2398,10 +2497,9 @@
                 }, 10);
             }
 
-            // Mostra o popover inteligente e gerencia o botão X
             document.body.addEventListener('click', (e) => {
                 const verMaisBtn = e.target.closest('.ver-mais-btn');
-                const fecharPopoverBtn = e.target.closest('#close-obs-popover'); // Detecta o clique no X
+                const fecharPopoverBtn = e.target.closest('#close-obs-popover');
 
                 if (verMaisBtn) {
                     e.stopPropagation();
@@ -2413,7 +2511,6 @@
                     const rect = verMaisBtn.getBoundingClientRect();
 
                     let top = rect.bottom + 5;
-                    // O NOVO CÓDIGO FICA ASSIM:
                     let left = rect.left - (obsPopover.offsetWidth - rect.width);
 
                     if (top + obsPopover.offsetHeight > window.innerHeight) {
@@ -2427,10 +2524,8 @@
                     obsPopover.style.top = `${top}px`;
                     obsPopover.style.left = `${left}px`;
                 } else if (fecharPopoverBtn) {
-                    // Se clicou no X, fecha o popover
                     obsPopover.classList.add('hidden');
                 } else if (!obsPopover.classList.contains('hidden') && !e.target.closest('#obs-popover')) {
-                    // Se clicou fora do popover, fecha também
                     obsPopover.classList.add('hidden');
                 }
             });
@@ -2531,10 +2626,8 @@
 
                 for (let i = startPage; i <= endPage; i++) {
                     if (i === currentPage) {
-                        // Botão da página ATUAL
                         buttonsHTML += `<button class="px-3 py-1 mx-1 rounded-md text-sm font-bold bg-indigo-600 text-white">${i}</button>`;
                     } else {
-                        // Botões das OUTRAS páginas (agora com hover colorido e texto branco)
                         buttonsHTML += `<button onclick="changePage(${i})" class="px-3 py-1 mx-1 rounded-md text-sm font-medium transition-all duration-200 bg-white text-gray-700 hover:bg-indigo-500 hover:text-white hover:[-webkit-text-stroke:0.5px_currentColor]">${i}</button>`;
                     }
                 }
@@ -2918,7 +3011,7 @@
                         return;
                     }
 
-                    let resultHTML = `<div class="bg-white p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-lg mb-4 text-gray-700">Resultados Encontrados (${data.length}) - Clique para ver detalhes</h3><div class="space-y-2 max-h-80 overflow-y-auto">`;
+                    let resultHTML = `<div class="bg-white p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-lg mb-4 text-gray-700">Resultados Encontrados (${data.length}) - Clique para ver detalhes</h3><div class="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">`;
                     data.forEach(addr => {
                         const formattedCep = addr.cep.replace(/(\d{5})(\d{3})/, '$1-$2');
                         resultHTML += `
@@ -2948,12 +3041,22 @@
             // --- Lógica de Busca de CNPJ ---
             newCnpjSearchBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+
+                // Restaura o cabeçalho e os espaçamentos padrão antes de mostrar o campo de busca
+                document.querySelector('header').classList.remove('hidden');
+                cnpjSearchView.classList.add('p-6', 'bg-gray-50');
+
+                // CORREÇÃO: Adicionado o 'bg-slate-800' aqui para ele limpar o fundo escuro
+                cnpjSearchView.classList.remove('p-0', 'bg-slate-800', 'bg-white');
+
+                cnpjResultDiv.classList.add('h-auto');
+                cnpjResultDiv.classList.remove('h-full');
+
                 cnpjSearchContainer.classList.remove('hidden');
                 headerSearchContainer.classList.add('hidden');
                 cnpjResultDiv.innerHTML = '';
                 viewCnpjInput.value = '';
 
-                // Novas linhas para garantir que os erros de buscas passadas sumam
                 viewCnpjError.classList.add('hidden');
                 viewCnpjInput.classList.remove('border-red-500', 'focus:ring-red-500');
                 viewCnpjInput.classList.add('border-gray-300', 'focus:ring-indigo-500');
@@ -2969,260 +3072,146 @@
             const performCnpjSearch = async (cnpjValue) => {
                 const cnpj = cnpjValue.replace(/\D/g, '');
 
-                // Garante que o painel de busca apareça e o botão do cabeçalho suma ao iniciar uma nova validação
                 cnpjSearchContainer.classList.remove('hidden');
                 headerSearchContainer.classList.add('hidden');
-
-                // Limpa erros anteriores
                 viewCnpjError.classList.add('hidden');
-                viewCnpjInput.classList.remove('border-red-500', 'focus:ring-red-500');
-                viewCnpjInput.classList.add('border-gray-300', 'focus:ring-indigo-500');
+                viewCnpjInput.classList.remove('border-gray-300', 'focus:ring-indigo-500');
+                viewCnpjInput.classList.add('border-red-500', 'focus:ring-red-500');
 
-                // 1ª Validação: Quantidade de dígitos
                 if (cnpj.length !== 14) {
                     viewCnpjError.textContent = 'CNPJ incompleto. Deve conter 14 dígitos.';
                     viewCnpjError.classList.remove('hidden');
-                    viewCnpjInput.classList.remove('border-gray-300', 'focus:ring-indigo-500');
-                    viewCnpjInput.classList.add('border-red-500', 'focus:ring-red-500');
                     return;
                 }
 
-                // 2ª Validação: Validação matemática real (Evita buscas de números falsos como 00000000000000)
                 if (!isValidCnpj(cnpj)) {
                     viewCnpjError.textContent = 'CNPJ inválido (Dígitos verificadores incorretos).';
                     viewCnpjError.classList.remove('hidden');
-                    viewCnpjInput.classList.remove('border-gray-300', 'focus:ring-indigo-500');
-                    viewCnpjInput.classList.add('border-red-500', 'focus:ring-red-500');
                     return;
                 }
 
-                cnpjResultDiv.innerHTML = createContentLoader('Consultando CNPJ...');
+                cnpjSearchPerformed = true;
+                cnpjSearchContainer.classList.add('hidden');
+
+                // Configura a tela para ocupar 100% do espaço
+                document.querySelector('header').classList.add('hidden');
+                cnpjSearchView.classList.remove('p-6', 'bg-gray-50');
+                cnpjSearchView.classList.add('p-0', 'bg-slate-800');
+                cnpjResultDiv.classList.remove('h-auto');
+                cnpjResultDiv.classList.add('h-full');
+
+                // Tela de carregamento
+                cnpjResultDiv.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full text-gray-400 bg-slate-50">
+            <svg class="animate-spin h-10 w-10 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="font-medium text-lg">Preparando ambiente e verificando cadastro...</p>
+        </div>
+    `;
 
                 try {
+                    // 1. Consulta a API para pegar a Razão Social
                     const response = await fetch(`https://open.cnpja.com/office/${cnpj}`);
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => null);
-                        throw { status: response.status, data: errorData };
-                    }
-                    const data = await response.json();
+                    let companyName = "Nome não encontrado";
+                    let formattedCnpj = formatCnpj(cnpj);
 
-                    cnpjSearchPerformed = true;
-                    cnpjSearchContainer.classList.add('hidden'); // Esconde o formulário apenas em caso de SUCESSO
-                    headerSearchContainer.classList.remove('hidden'); // Mostra o botão do cabeçalho apenas em caso de SUCESSO
-
-                    const cleanCnpj = data.taxId.replace(/\D/g, '');
-                    const cnpjaUrl = `https://cnpja.com/office/${cleanCnpj}`;
-
-                    // --- LÓGICA DE VERIFICAÇÃO DE CADASTRO ---
-                    const existingSupplier = suppliers.find(s => s.cnpj && s.cnpj.replace(/\D/g, '') === cleanCnpj);
-
-                    let registrationBadgeHtml = '';
-                    let actionButtonHtml = '';
-
-                    if (existingSupplier) {
-                        registrationBadgeHtml = `
-                <div class="mt-2 inline-flex items-center bg-orange-100 text-orange-800 px-3 py-1 rounded-md text-sm font-medium border border-orange-200">
-                    <ion-icon name="alert-circle-outline" class="mr-2 text-lg"></ion-icon>
-                    <span>Já cadastrado (Cód: ${existingSupplier.code})</span>
-                </div>`;
-
-                        actionButtonHtml = `
-                <button id="edit-existing-supplier-btn" data-id="${existingSupplier.id}" class="bg-yellow-500 text-white px-4 py-2 text-sm rounded-md hover:bg-yellow-600 flex items-center space-x-2 whitespace-nowrap">
-                    <ion-icon name="create-outline"></ion-icon>
-                    <span>Editar Cadastro Existente</span>
-                </button>`;
-                    } else {
-                        registrationBadgeHtml = `
-                <div class="mt-2 inline-flex items-center bg-gray-100 text-gray-600 px-3 py-1 rounded-md text-sm font-medium border border-gray-200">
-                    <ion-icon name="ellipse-outline" class="mr-2 text-xs"></ion-icon>
-                    <span>Não cadastrado no sistema</span>
-                </div>`;
-
-                        actionButtonHtml = `
-                <button id="register-as-supplier-btn" class="bg-green-600 text-white px-4 py-2 text-sm rounded-md hover:bg-green-700 flex items-center space-x-2 whitespace-nowrap">
-                    <ion-icon name="person-add-outline"></ion-icon>
-                    <span>Cadastrar como fornecedor</span>
-                </button>`;
+                    if (response.ok) {
+                        const data = await response.json();
+                        companyName = data.company?.name || "Razão Social indisponível";
+                        formattedCnpj = formatCnpj(data.taxId || cnpj);
                     }
 
-                    // CNPJá retorna status como "Ativa" ou "Baixada", vamos padronizar para maiúsculo
-                    const status = data.status?.text?.toUpperCase() || '';
+                    // 2. Verifica se o CNPJ já está cadastrado
+                    const existingSupplier = suppliers.find(s => s.cnpj && s.cnpj.replace(/\D/g, '') === cnpj);
+
                     let statusHtml = '';
-                    if (status === 'ATIVA') {
-                        statusHtml = `
-                <div class="flex items-center gap-2 text-sm font-medium ml-3">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" fill="#22C55E"></circle>
-                        <path d="M8.5 12.5L11 15L15.5 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span class="text-green-700">Ativa</span>
-                </div>`;
-                    } else if (status === 'BAIXADA') {
-                        statusHtml = `
-                <div class="flex items-center gap-4 ml-3">
-                    <div class="flex items-center gap-2 text-sm font-medium">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="12" r="10" fill="#EF4444"></circle>
-                            <path d="M15 9L9 15M9 9L15 15" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span class="text-red-700">Baixada</span>
-                    </div>
-                    <div class="flex items-center gap-1.5 text-xs text-gray-500">
-                        <ion-icon name="calendar-outline"></ion-icon>
-                        <span>${formatDate(data.statusDate)}</span>
-                    </div>
-                </div>`;
-                    }
-
-                    const renderCnaes = (cnaes) => {
-                        if (!cnaes || cnaes.length === 0) return '<p class="text-gray-500">Nenhuma atividade secundária encontrada.</p>';
-                        return cnaes.map(cnae => createStyledField('ellipse-outline', cnae.id, cnae.text, true)).join('');
-                    }
-
-                    // Formatando Telefone e Email que vêm em Arrays no CNPJá
-                    const telefoneFormatado = data.phones?.length > 0 ? formatPhone(data.phones[0].area + data.phones[0].number) : 'Não informado';
-                    const emailFormatado = data.emails?.length > 0 ? data.emails[0].address : 'Não informado';
-
-                    cnpjResultDiv.innerHTML = `
-            <div class="space-y-4 pb-4">
-                <div class="bg-white p-6 rounded-xl shadow-sm">
-                   <div class="flex flex-wrap justify-between items-start gap-4">
-                       <div>
-                            <div class="flex items-center gap-3 mb-1 flex-wrap">
-                                <ion-icon name="business-outline" class="text-2xl text-gray-600"></ion-icon>
-                                <div class="flex items-center gap-2">
-                                    <h3 class="text-xl font-bold text-gray-800">${data.company?.name || 'Não informada'}</h3>
-                                    <button class="copy-btn transition-colors flex items-center text-gray-400 hover:text-indigo-600" data-text="${String(data.company?.name).replace(/"/g, '"')}" title="Copiar Razão Social">
-                                        <ion-icon name="copy-outline" class="text-xl"></ion-icon>
-                                    </button>
-                                </div>
-                                ${statusHtml}
-                            </div>
-                            
-                            ${data.alias ? `
-                            <div class="flex items-center gap-2 pl-9 mb-2">
-                                <p class="text-sm text-gray-500">${data.alias}</p>
-                                <button class="copy-btn transition-colors flex items-center text-gray-400 hover:text-indigo-600" data-text="${String(data.alias).replace(/"/g, '"')}" title="Copiar Nome Fantasia">
-                                    <ion-icon name="copy-outline" class="text-lg"></ion-icon>
-                                </button>
-                            </div>
-                            ` : `
-                            <p class="text-sm text-gray-400 italic pl-9 mb-2">Sem nome fantasia</p>
-                            `}
-                            
-                            <div class="pl-9 mt-1">
-                                ${registrationBadgeHtml}
-                            </div>
-                       </div>
-                        <div class="flex items-center space-x-2 flex-wrap gap-y-2">
-                            ${actionButtonHtml}
-                            <a href="${cnpjaUrl}" target="_blank" class="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 flex items-center space-x-2 whitespace-nowrap">
-                                    <ion-icon name="open-outline"></ion-icon>
-                                    <span>Consulta Completa</span>
-                            </a>
-                        </div>
-                   </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div class="lg:col-span-2 space-y-4">
-                        <div class="bg-white p-6 rounded-xl shadow-sm">
-                            <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Dados Gerais</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 text-sm">
-                                ${createStyledField('business-outline', 'CNPJ', formatCnpj(data.taxId))}
-                                ${createStyledField('information-circle-outline', 'Situação Cadastral', `${data.status?.text} desde ${formatDate(data.statusDate)}`)}
-                                ${createStyledField('calendar-outline', 'Data de Abertura', formatDate(data.founded))}
-                                ${createStyledField('expand-outline', 'Porte', data.company?.size?.text || 'Não informado')}
-                                ${createStyledField('call-outline', 'Telefone', telefoneFormatado)}
-                                ${createStyledField('mail-outline', 'E-mail', emailFormatado)}
-                                ${createStyledField('document-text-outline', 'Natureza Jurídica', data.company?.nature?.text || 'Não informada')}
-                                ${createStyledField('cash-outline', 'Capital Social', Number(data.company?.equity || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))}
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm">
-                            <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Endereço</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-4 text-sm">
-                                ${createStyledField('location-outline', 'Logradouro', data.address?.street || 'Não informado')}
-                                ${createStyledField('list-outline', 'Número', data.address?.number || 'S/N')}
-                                ${createStyledField('cube-outline', 'Complemento', data.address?.details || 'Nenhum')}
-                                ${createStyledField('map-outline', 'Bairro', data.address?.district || 'Não informado')}
-                                ${createStyledField('trail-sign-outline', 'Município / UF', `${data.address?.city || '-'} / ${data.address?.state || '-'}`)}
-                                ${createStyledField('locate-outline', 'CEP', (data.address?.zip || '').replace(/(\d{5})(\d{3})/, '$1-$2'))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="bg-white p-6 rounded-xl shadow-sm">
-                            <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Atividade Principal (CNAE)</h4>
-                            <div class="pt-4 text-sm">
-                                ${createStyledField('briefcase-outline', data.mainActivity?.id, data.mainActivity?.text, true)}
-                            </div>
-                        </div>
-                         <div class="bg-white p-6 rounded-xl shadow-sm">
-                            <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Atividades Secundárias</h4>
-                            <div class="pt-4 text-sm space-y-3 max-h-48 overflow-y-auto">
-                                ${renderCnaes(data.sideActivities)}
-                            </div>
-                        </div>
-                         <div class="bg-white p-6 rounded-xl shadow-sm">
-                            <h4 class="font-semibold text-lg mb-4 text-gray-700 border-b pb-2">Quadro Societário</h4>
-                            <div class="pt-4 text-sm space-y-3 max-h-60 overflow-y-auto">
-                                ${data.company?.members && data.company.members.length > 0 ? data.company.members.map(member => createStyledField('person-circle-outline', member.person?.name, member.role?.text)).join('') : '<p class="text-gray-500">Nenhum sócio encontrado.</p>'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-
                     if (existingSupplier) {
-                        document.getElementById('edit-existing-supplier-btn').addEventListener('click', (e) => {
-                            const id = e.currentTarget.dataset.id;
-                            switchView('main');
-                            setTimeout(() => openModal(id), 50);
-                        });
+                        // Se existir, adiciona etiqueta com o CÓDIGO e o ÍCONE DE CÓPIA ao lado dele
+                        statusHtml = `
+                <div class="bg-green-500 text-white px-3 py-1.5 rounded text-sm font-bold flex items-center gap-1.5 shadow-sm border border-green-600">
+                    <ion-icon name="checkmark-circle" class="text-lg"></ion-icon> 
+                    <span>Cadastrado (Cód: ${existingSupplier.code})</span>
+                    <button class="copy-btn text-green-100 hover:text-white transition-colors flex items-center ml-1" data-text="${existingSupplier.code}" title="Copiar Código">
+                        <ion-icon name="copy-outline" class="text-xs"></ion-icon>
+                    </button>
+                </div>
+            `;
                     } else {
-                        document.getElementById('register-as-supplier-btn').addEventListener('click', () => {
-                            const cnpjToPrefill = formatCnpj(data.taxId);
-                            const nameToPrefill = data.company?.name;
+                        // Se não existir, mantém o botão de cadastrar
+                        statusHtml = `<button id="btn-cadastrar-overlay" data-cnpj="${formattedCnpj}" data-name="${companyName.replace(/"/g, '"')}" class="bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-1.5 rounded text-sm font-bold transition shadow-sm flex items-center gap-1.5 border border-indigo-600"><ion-icon name="person-add-outline" class="text-lg"></ion-icon> Cadastrar</button>`;
+                    }
+
+                    // 3. Monta o HTML com a Barra Superior contendo os botões de cópia
+                    cnpjResultDiv.innerHTML = `
+            <div class="flex flex-col h-full w-full relative">
+                
+                <div id="overlay-cnpj-bar" class="bg-slate-800 text-white px-6 py-3 flex justify-between items-center shadow-md flex-shrink-0 border-b border-slate-700">
+                    <div class="flex items-center gap-4 overflow-hidden flex-1 mr-4">
+                        
+                        <div class="flex items-center gap-2 bg-slate-900 px-3 py-1 rounded text-indigo-400 font-mono text-sm border border-slate-700 flex-shrink-0">
+                            <ion-icon name="business"></ion-icon>
+                            <span>${formattedCnpj}</span>
+                            <button class="copy-btn text-slate-400 hover:text-indigo-400 transition-colors flex items-center ml-1" data-text="${formattedCnpj}" title="Copiar CNPJ">
+                                <ion-icon name="copy-outline" class="text-xs"></ion-icon>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center gap-1.5 overflow-hidden min-w-0">
+                            <span class="font-semibold truncate text-sm text-slate-200" title="${companyName}">${companyName}</span>
+                            <button class="copy-btn text-slate-400 hover:text-indigo-400 transition-colors flex-shrink-0 flex items-center" data-text="${companyName.replace(/"/g, '"')}" title="Copiar Razão Social">
+                                <ion-icon name="copy-outline" class="text-xs"></ion-icon>
+                            </button>
+                        </div>
+
+                    </div>
+                    <div class="flex items-center gap-4 flex-shrink-0">
+                        ${statusHtml}
+                        <div class="w-px h-6 bg-slate-600 mx-2"></div>
+                        <button id="close-overlay-bar" class="text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-full p-1.5 transition flex items-center justify-center" title="Fechar barra superior">
+                            <ion-icon name="close-outline" class="text-xl"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <iframe 
+                    src="https://cnpja.com/office/${cnpj}" 
+                    class="w-full flex-1 border-0 bg-white" 
+                    allow="clipboard-read; clipboard-write">
+                </iframe>
+                
+            </div>
+        `;
+
+                    // 4. Adiciona a funcionalidade do botão de Cadastrar
+                    const btnCadastrar = document.getElementById('btn-cadastrar-overlay');
+                    if (btnCadastrar) {
+                        btnCadastrar.addEventListener('click', () => {
+                            const prefillCnpj = btnCadastrar.dataset.cnpj;
+                            const prefillName = btnCadastrar.dataset.name;
                             switchView('main');
-                            openModal(null, { cnpj: cnpjToPrefill, name: nameToPrefill });
+                            setTimeout(() => openModal(null, { cnpj: prefillCnpj, name: prefillName }), 150);
+                        });
+                    }
+
+                    // 5. Funcionalidade do botão (X) para fechar a barra
+                    const btnClose = document.getElementById('close-overlay-bar');
+                    if (btnClose) {
+                        btnClose.addEventListener('click', () => {
+                            document.getElementById('overlay-cnpj-bar').style.display = 'none';
                         });
                     }
 
                 } catch (error) {
-                    cnpjResultDiv.innerHTML = '';
-
-                    cnpjSearchContainer.classList.remove('hidden');
-                    headerSearchContainer.classList.add('hidden');
-
-                    // CORREÇÃO: O padrão agora é avisar sobre a internet!
-                    let errorMsg = 'Falha na conexão. Verifique sua internet e tente novamente.';
-
-                    // O sistema só muda a mensagem se a internet estiver funcionando e a API responder um código
-                    if (error && error.status) {
-                        if (error.status === 404) {
-                            errorMsg = 'CNPJ não encontrado na base de dados da Receita Federal.';
-                        } else if (error.status === 429) {
-                            errorMsg = 'Muitas consultas simultâneas. Tente novamente em alguns instantes.';
-                        } else {
-                            errorMsg = `O servidor da API falhou (Código: ${error.status}). Tente novamente mais tarde.`;
-                        }
-                    }
-
-                    // Exibe na tela
-                    viewCnpjError.textContent = errorMsg;
-                    viewCnpjError.classList.remove('hidden');
-                    viewCnpjInput.classList.remove('border-gray-300', 'focus:ring-indigo-500');
-                    viewCnpjInput.classList.add('border-red-500', 'focus:ring-red-500');
-                    viewCnpjInput.focus();
+                    cnpjResultDiv.innerHTML = `<iframe src="https://cnpja.com/office/${cnpj}" class="w-full h-full border-0" allow="clipboard-read; clipboard-write"></iframe>`;
+                    showToast('Aviso: Não foi possível validar o status da empresa. Exibindo site padrão.', 'error');
                 }
             };
 
             viewCnpjInput.addEventListener('input', (e) => {
                 e.target.value = formatCnpj(e.target.value);
 
-                // Limpa o alerta visual assim que o usuário começar a corrigir o número
                 viewCnpjError.classList.add('hidden');
                 viewCnpjInput.classList.remove('border-red-500', 'focus:ring-red-500');
                 viewCnpjInput.classList.add('border-gray-300', 'focus:ring-indigo-500');
@@ -3328,7 +3317,7 @@
                 const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(fullAddressForQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
 
                 cepResultDiv.innerHTML = `
-                <div class="bg-white rounded-xl shadow-sm flex flex-col md:flex-row overflow-hidden">
+                <div class="bg-white rounded-xl shadow-sm flex flex-col md:flex-row overflow-hidden border border-gray-200">
                     <div class="flex-1 p-6">
                         <div class="pb-4 border-b">
                             <h3 class="text-xl font-bold text-gray-800 uppercase">${logradouro}</h3>
@@ -3419,8 +3408,8 @@
             };
 
             function formatDate(dateStr) {
-                if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return 'N/A';
-                const [year, month, day] = dateStr.split('-');
+                if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr.slice(0, 10))) return 'N/A';
+                const [year, month, day] = dateStr.slice(0, 10).split('-');
                 return `${day}/${month}/${year}`;
             }
 
@@ -3433,6 +3422,14 @@
                 cnpj = cnpj.replace(/(\d{4})(\d)/, '$1-$2');
                 return cnpj.slice(0, 18);
             }
+
+            // Mapeamento nativo e re-renderização para cliques em células copiáveis
+            cnpjResultDiv.addEventListener('click', (e) => {
+                const cell = e.target.closest('.copyable-cell');
+                if (cell) {
+                    copyToClipboard(cell.textContent.trim());
+                }
+            });
 
             function formatCpf(value) {
                 if (!value) return "";
@@ -3522,7 +3519,7 @@
                 }
                 document.body.removeChild(textarea);
                 const searchInput = document.getElementById('supplier-search-input');
-                if (searchInput) {
+                if (searchInput && mainView.style.display !== 'none') {
                     searchInput.focus();
                 }
             }
@@ -3555,13 +3552,13 @@
                 const cleanValue = value || 'Não informado';
                 const labelHtml = showLabel ? `<p class="font-medium text-gray-500">${label}</p>` : '';
                 return `
-                    <div class="flex items-start gap-3">
+                    <div class="flex items-start gap-2 max-w-full">
                         <ion-icon name="${icon}" class="text-lg text-gray-400 mt-0.5 flex-shrink-0"></ion-icon>
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             ${labelHtml}
-                            <p class="text-gray-800 inline">${cleanValue}</p>
-                            <button class="copy-btn ml-1.5 transition-colors inline-flex items-center" data-text="${cleanValue}" title="Copiar ${label}">
-                                <ion-icon name="copy-outline" class="text-lg"></ion-icon>
+                            <p class="text-gray-800 inline break-words font-medium">${cleanValue}</p>
+                            <button class="copy-btn ml-1 transition-colors inline-flex items-center align-middle" data-text="${String(cleanValue).replace(/"/g, '"')}" title="Copiar ${label}">
+                                <ion-icon name="copy-outline" class="text-base text-gray-400 hover:text-indigo-600"></ion-icon>
                             </button>
                         </div>
                     </div>`;
@@ -3569,15 +3566,15 @@
 
             function createCopyableField(label, value, showLabel = true) {
                 const cleanValue = value || 'Não informado';
-                const labelHtml = showLabel ? `<span class="font-medium text-gray-600">${label}:</span>` : '';
+                const labelHtml = showLabel ? `<span class="font-medium text-gray-500">${label}:</span>` : '';
                 return `
-                    <div class="flex items-center">
-                        <p>
+                    <div class="flex items-center gap-1.5 text-sm">
+                        <p class="truncate">
                             ${labelHtml}
-                            <span class="text-gray-800 ml-2">${cleanValue}</span>
+                            <span class="text-gray-800 ml-1 font-semibold">${cleanValue}</span>
                         </p>
-                        <button class="copy-btn ml-2 transition-colors" data-text="${cleanValue}" title="Copiar ${label}">
-                            <ion-icon name="copy-outline" class="text-lg"></ion-icon>
+                        <button class="copy-btn transition-colors flex items-center" data-text="${String(cleanValue).replace(/"/g, '"')}" title="Copiar ${label}">
+                            <ion-icon name="copy-outline" class="text-base text-gray-400 hover:text-indigo-600"></ion-icon>
                         </button>
                     </div>`;
             }

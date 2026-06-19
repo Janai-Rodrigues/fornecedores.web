@@ -2997,7 +2997,7 @@
                 const encodedStreet = encodeURIComponent(street);
 
                 try {
-                    const response = await fetch(`${corsProxy}https://viacep.com.br/ws/${encodedUf}/${encodedCity}/${encodedStreet}/json/`);
+                    const response = await fetch(`https://viacep.com.br/ws/${encodedUf}/${encodedCity}/${encodedStreet}/json/`);
                     if (!response.ok) throw { status: response.status };
 
                     const data = await response.json();
@@ -3112,15 +3112,26 @@
     `;
 
                 try {
-                    // 1. Consulta a API para pegar a Razão Social
+                    // 1. Consulta a API para pegar a Razão Social e CEP
                     const response = await fetch(`https://open.cnpja.com/office/${cnpj}`);
                     let companyName = "Nome não encontrado";
                     let formattedCnpj = formatCnpj(cnpj);
+                    let companyCep = ""; // Variável para armazenar o CEP
 
                     if (response.ok) {
                         const data = await response.json();
                         companyName = data.company?.name || "Razão Social indisponível";
                         formattedCnpj = formatCnpj(data.taxId || cnpj);
+                        
+                        // Extrai e formata o CEP se ele existir no retorno da API
+                        if (data.address && data.address.zip) {
+                            let rawCep = data.address.zip.replace(/\D/g, '');
+                            if (rawCep.length === 8) {
+                                companyCep = rawCep.replace(/^(\d{5})(\d{3})/, '$1-$2');
+                            } else {
+                                companyCep = data.address.zip; // Fallback
+                            }
+                        }
                     }
 
                     // 2. Verifica se o CNPJ já está cadastrado
@@ -3164,11 +3175,29 @@
                                 <ion-icon name="copy-outline" class="text-xs"></ion-icon>
                             </button>
                         </div>
+                        
+                        ${companyCep ? `
+                        <div class="w-px h-5 bg-slate-600 mx-2 flex-shrink-0 hidden md:block"></div>
+                        <div class="flex items-center gap-1.5 overflow-hidden flex-shrink-0 hidden sm:flex" title="CEP">
+                            <ion-icon name="location-outline" class="text-slate-400"></ion-icon>
+                            <span class="font-mono text-sm text-slate-300">${companyCep}</span>
+                            <button class="copy-btn text-slate-400 hover:text-indigo-400 transition-colors flex items-center" data-text="${companyCep}" title="Copiar CEP">
+                                <ion-icon name="copy-outline" class="text-xs"></ion-icon>
+                            </button>
+                        </div>
+                        ` : ''}
 
                     </div>
-                    <div class="flex items-center gap-4 flex-shrink-0">
+                    <div class="flex items-center gap-3 sm:gap-4 flex-shrink-0">
                         ${statusHtml}
-                        <div class="w-px h-6 bg-slate-600 mx-2"></div>
+                        <div class="w-px h-6 bg-slate-600 mx-1 sm:mx-2 hidden sm:block"></div>
+                        
+                        <!-- Novo Botão de Nova Busca na Barra -->
+                        <button id="btn-nova-busca-overlay" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded text-sm font-medium transition flex items-center gap-1.5 shadow-sm border border-slate-600" title="Nova Busca de CNPJ (CTRL+D)">
+                            <ion-icon name="search-outline"></ion-icon> <span class="hidden sm:inline">Nova Busca</span>
+                        </button>
+
+                        <div class="w-px h-6 bg-slate-600 mx-1 sm:mx-2"></div>
                         <button id="close-overlay-bar" class="text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-full p-1.5 transition flex items-center justify-center" title="Fechar barra superior">
                             <ion-icon name="close-outline" class="text-xl"></ion-icon>
                         </button>
@@ -3200,6 +3229,15 @@
                     if (btnClose) {
                         btnClose.addEventListener('click', () => {
                             document.getElementById('overlay-cnpj-bar').style.display = 'none';
+                        });
+                    }
+
+                    // 6. Funcionalidade do botão Nova Busca do overlay
+                    const btnNovaBuscaOverlay = document.getElementById('btn-nova-busca-overlay');
+                    if (btnNovaBuscaOverlay) {
+                        btnNovaBuscaOverlay.addEventListener('click', () => {
+                            const newSearchBtn = document.getElementById('new-cnpj-search-btn');
+                            if (newSearchBtn) newSearchBtn.click();
                         });
                     }
 
@@ -3362,7 +3400,7 @@
                 }
                 cepResultDiv.innerHTML = createContentLoader('Buscando CEP...');
                 try {
-                    const response = await fetch(`${corsProxy}https://brasilapi.com.br/api/cep/v1/${cleanedCep}`);
+                    const response = await fetch(`https://brasilapi.com.br/api/cep/v1/${cleanedCep}`);
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({}));
                         if (response.status === 404 || errorData.type === 'cep_not_found') {

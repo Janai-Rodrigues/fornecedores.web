@@ -686,7 +686,8 @@
                         <label for="remember-me" class="ml-2 block text-sm text-gray-900">Lembrar de mim</label>
                     </div>
                     <div class="text-sm">
-                        <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">Esqueceu a senha?</a>
+                        <a href="#" id="forgot-password-link"
+                            class="font-medium text-indigo-600 hover:text-indigo-500">Esqueceu a senha?</a>
                     </div>
                 </div>
 
@@ -1448,6 +1449,7 @@
             const passwordToggleIcon = document.getElementById('password-toggle-icon');
             const authButton = document.getElementById('auth-button');
             const logoutButton = document.getElementById('logout-button');
+            const forgotPasswordLink = document.getElementById('forgot-password-link');
             let unsubscribeSuppliers = null;
 
             onAuthStateChanged(auth, user => {
@@ -1499,6 +1501,36 @@
                     await signOut(auth);
                 } catch (error) {
                     showToast('Erro ao tentar sair.', 'error');
+                }
+            });
+
+            forgotPasswordLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const email = emailInput.value.trim();
+
+                if (!email) {
+                    showToast('Por favor, digite seu e-mail no campo acima para recuperar a senha.', 'info');
+                    return;
+                }
+
+                try {
+                    await sendPasswordResetEmail(auth, email);
+                    showToast(`E-mail de redefinição enviado para ${email}`, 'success');
+                } catch (error) {
+                    console.error("Erro ao enviar e-mail de redefinição:", error);
+
+                    // Verifica se o erro é de usuário não encontrado
+                    if (error.code === 'auth/user-not-found') {
+                        showToast('E-mail não cadastrado no sistema. Verifique se digitou corretamente.', 'error');
+                    }
+                    // Verifica se o e-mail está mal formatado (ex: faltando o @)
+                    else if (error.code === 'auth/invalid-email') {
+                        showToast('O formato do e-mail é inválido.', 'error');
+                    }
+                    // Erro genérico para outros problemas
+                    else {
+                        showToast('Erro ao enviar e-mail. Tente novamente.', 'error');
+                    }
                 }
             });
 
@@ -3122,7 +3154,7 @@
                         const data = await response.json();
                         companyName = data.company?.name || "Razão Social indisponível";
                         formattedCnpj = formatCnpj(data.taxId || cnpj);
-                        
+
                         // Extrai e formata o CEP se ele existir no retorno da API
                         if (data.address && data.address.zip) {
                             let rawCep = data.address.zip.replace(/\D/g, '');
